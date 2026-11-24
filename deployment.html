@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'deployment';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Testing in Bialet" href="tests.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -634,7 +634,7 @@ migrations before serving the next request. No manual steps, no downtime.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl<span class="w"> </span>-fsS<span class="w"> </span>http://127.0.0.1:7001/_health
 </pre></div>
 </div>
-<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.28"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
+<div class="highlight-json notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="nt">"status"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">,</span><span class="nt">"version"</span><span class="p">:</span><span class="s2">"1.2.29"</span><span class="p">,</span><span class="nt">"uptime_seconds"</span><span class="p">:</span><span class="mi">42</span><span class="p">,</span><span class="nt">"database"</span><span class="p">:</span><span class="s2">"ok"</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>It returns <code class="docutils literal notranslate"><span class="pre">200</span></code> when a <code class="docutils literal notranslate"><span class="pre">SELECT</span> <span class="pre">1</span></code> succeeds, or <code class="docutils literal notranslate"><span class="pre">503</span></code> with
@@ -1364,7 +1364,9 @@ loses them.</p>
 <p>To restore, stop Bialet, replace <code class="docutils literal notranslate"><span class="pre">_db.sqlite3</span></code> with the backup, remove any
 stale <code class="docutils literal notranslate"><span class="pre">-wal</span></code>/<code class="docutils literal notranslate"><span class="pre">-shm</span></code> files, start Bialet, and load a page that reads the
 restored tables. Migrations do not run backwards, so restoring the database
-is the rollback for a bad migration.</p>
+is the rollback for a bad migration. A migration that fails now rolls back as a
+unit, leaving no partial schema to clean up, unless it opted out with
+<code class="docutils literal notranslate"><span class="pre">Db.migrate(name,</span> <span class="pre">sql,</span> <span class="pre">false)</span></code>.</p>
 </section>
 <section id="upgrades-and-rollback">
 <h2>Upgrades and Rollback<a class="headerlink" href="#upgrades-and-rollback" title="Link to this heading">#</a></h2>
@@ -1373,7 +1375,8 @@ Deploy</a>). The binary does: stop the service,
 replace it, start it.</p>
 <ol class="arabic simple">
 <li><p><strong>Back up first</strong> — the database as above. A binary rollback cannot undo a
-migration that already ran.</p></li>
+migration that already ran. A migration that fails rolls back before the
+process exits, so the database keeps the schema the backup holds.</p></li>
 <li><p><strong>Keep the previous binary</strong> — <code class="docutils literal notranslate"><span class="pre">cp</span> <span class="pre">bialet</span> <span class="pre">bialet.prev</span></code> before replacing it,
 or keep one directory per version and point <code class="docutils literal notranslate"><span class="pre">ExecStart=</span></code> at a symlink.</p></li>
 <li><p><strong>Replace atomically</strong> — write the new binary next to the old one and

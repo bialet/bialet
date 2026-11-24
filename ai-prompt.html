@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ai-prompt';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -66,7 +66,7 @@
     <link rel="prev" title="FAQ" href="faq.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -861,7 +861,11 @@ this guide uses the <span class="gs">**`_app/` folder**</span>, which keeps the 
 <span class="sb">```</span>
 <span class="sb">my-app/</span>
 <span class="sb">├── _app/                    # Protected folder (never served directly)</span>
-<span class="sb">│   ├── template.wren        # Site-wide layout (header, footer, nav)</span>
+<span class="sb">│   ├── template.wren        # Page shell: Layout.page(title, user, content)</span>
+<span class="sb">│   ├── components/          # Reusable markup, one class per file</span>
+<span class="sb">│   │   ├── cards.wren       # Cards.tool(item), Cards.mission(row)</span>
+<span class="sb">│   │   ├── hud.wren         # Hud.state(game)</span>
+<span class="sb">│   │   └── nav.wren         # Nav.bar(user)</span>
 <span class="sb">│   ├── migration.wren       # Database schema migrations</span>
 <span class="sb">│   ├── domain.wren          # Domain classes (models)</span>
 <span class="sb">│   └── cron.wren            # Scheduled tasks (optional)</span>
@@ -881,10 +885,38 @@ this guide uses the <span class="gs">**`_app/` folder**</span>, which keeps the 
 <span class="sb">    └── style.css            # Static CSS files</span>
 <span class="sb">```</span>
 
+A route file is thin: read the input, call the domain, render a component. Markup
+that two routes share belongs in <span class="sb">`_app/components/`</span>, not in both files.
+
 <span class="k">&gt; </span><span class="ge">**Note:** Bialet also allows flat root-level files instead —</span>
 <span class="k">&gt; </span><span class="ge">`_template.wren`, `_migration.wren`, `_domain.wren`, `_cron.wren`. Both</span>
 <span class="k">&gt; </span><span class="ge">conventions work identically; pick one and stay consistent within a</span>
 <span class="k">&gt; </span><span class="ge">project. This guide uses `_app/` throughout.</span>
+
+<span class="gu">### Structuring Larger Apps</span>
+
+Split by concern, not by size:
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**Route files are controllers.**</span> One <span class="sb">`.wren`</span> file per URL: read input, call
+  the domain, <span class="sb">`return`</span> a component. If a route owns a <span class="sb">`&lt;li&gt;`</span> or a card that
+  another route also needs, that markup is in the wrong place.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Components render.**</span> One class per region of the page — <span class="sb">`Layout`</span> in
+  <span class="sb">`template.wren`</span>, <span class="sb">`Nav`</span>, <span class="sb">`Hud`</span> and <span class="sb">`Cards`</span> in <span class="sb">`_app/components/`</span>, one file
+  each. A component takes its data as parameters and returns an inline HTML
+  block.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Domain classes decide.**</span> Rules and derived values (<span class="sb">`game.fuelLow`</span>,
+  <span class="sb">`Mission.upcoming(limit)`</span>) live in <span class="sb">`_app/domain.wren`</span>. A page's query can run
+  in the route or behind a <span class="sb">`static`</span> domain method; it never runs inside a
+  component.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Shared helpers:**</span> presentation used by two components is a component
+  method; a rule used by two routes is a domain method; a permission check is a
+  small class such as <span class="sb">`Auth`</span> under <span class="sb">`_app/`</span>.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Naming:**</span> the class names the region (<span class="sb">`Cards`</span>), the method names the item
+  (<span class="sb">`Cards.tool`</span>, <span class="sb">`Cards.mission`</span>). Split a growing layout class into <span class="sb">`Cards`</span>,
+  <span class="sb">`Hud`</span>, <span class="sb">`Nav`</span> and <span class="sb">`Layout`</span> instead of adding methods to one god class.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Repeated markup is app debt.**</span> If the same card, status bar or navigation
+  appears in two pages, extract a method and call it from both — the framework
+  will not do it for you.
 
 <span class="gu">### What Bialet Does NOT Have</span>
 
@@ -893,6 +925,8 @@ Bialet is intentionally simple. These concepts <span class="gs">**do not exist**
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `main.wren` entry point**</span> — each <span class="sb">`.wren`</span> file is executed based on the URL
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `routes/` folder**</span> — files ARE the routes (file-based routing)
 <span class="k">-</span><span class="w"> </span><span class="gs">**No middleware system**</span> — put shared logic in <span class="sb">`_app/`</span> helper classes
+<span class="k">-</span><span class="w"> </span><span class="gs">**No component framework**</span> — a component is a plain Wren class whose method
+  returns inline HTML. There is no registry, no props system and no JSX.
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `validators/` folder**</span> — validation goes in domain classes or inline
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `static/` folder convention**</span> — static files (css, js, images) go anywhere, as long as they don't start with <span class="sb">`_`</span> or <span class="sb">`.`</span>
 <span class="k">-</span><span class="w"> </span><span class="gs">**No `db/schema.sql`**</span> — schema is defined in <span class="sb">`_app/migration.wren`</span>
@@ -948,10 +982,12 @@ HTML — no route table, no <span class="sb">`app.get(...)`</span> calls.
 <span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="s2">"&lt;h1&gt;Not found&lt;/h1&gt;"</span>
 <span class="p">}</span>
 
-<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="x">&lt;article&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  {{ article["body"] }}</span>
-<span class="x">&lt;/article&gt;</span><span class="p">)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">],</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;article&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">article</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    {{ article["body"] }}</span>
+<span class="x">  &lt;/article&gt;</span>
+<span class="p">)</span>
 <span class="sb">```</span>
 
 One file serves every article — <span class="sb">`/article?id=1`</span>, <span class="sb">`/article?id=2`</span>, etc. — with
@@ -975,7 +1011,8 @@ inherited and can't change:
 <span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
 <span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <span class="w">  </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">404</span><span class="p">)</span>
-<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="x">&lt;main&gt;&lt;h1&gt;</span><span class="nc">User</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">found</span><span class="x">&lt;/h1&gt;&lt;/main&gt;</span><span class="p">)</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Not found"</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">    </span><span class="x">&lt;p&gt;User not found&lt;/p&gt;</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="sb">```</span>
 
@@ -987,29 +1024,26 @@ the folder; the deepest match wins.
 
 <span class="gu">## Views: Templates in `_app/template.wren`</span>
 
+A layout is a component: a class with a method that returns the page shell and
+takes the body as a parameter.
+
 <span class="sb">```wren</span>
 <span class="c1">// _app/template.wren</span>
-<span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s2">"My App"</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/components/nav"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Nav</span>
 
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="n">title</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">page</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
 <span class="x">        &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span>
-<span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
+<span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x"> · My App&lt;/title&gt;</span>
 <span class="w">      </span><span class="x">&lt;/head&gt;</span>
 <span class="x">      &lt;body&gt;</span>
-<span class="w">        </span><span class="x">&lt;header&gt;</span>
-<span class="x">          &lt;nav&gt;</span>
-<span class="w">            </span><span class="x">&lt;ul&gt;&lt;li&gt;&lt;strong&gt;My App&lt;/strong&gt;&lt;/li&gt;&lt;/ul&gt;</span>
-<span class="w">            </span><span class="x">&lt;ul&gt;</span>
-<span class="x">              &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;</span>
-<span class="x">              &lt;li&gt;&lt;a href="/about"&gt;About&lt;/a&gt;&lt;/li&gt;</span>
-<span class="x">            &lt;/ul&gt;</span>
-<span class="w">          </span><span class="x">&lt;/nav&gt;</span>
-<span class="x">        &lt;/header&gt;</span>
-<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="nc">Nav</span><span class="o">.</span><span class="n">bar</span><span class="p">(</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;main&gt;</span>
+<span class="x">          {{ content }}</span>
+<span class="x">        &lt;/main&gt;</span>
 <span class="w">        </span><span class="x">&lt;footer&gt;</span>
 <span class="x">          &lt;small&gt;</span><span class="o">&amp;</span><span class="n">copy</span><span class="err">;</span><span class="w"> </span><span class="nc">My</span><span class="w"> </span><span class="nc">App</span><span class="x">&lt;/small&gt;</span>
 <span class="x">        &lt;/footer&gt;</span>
@@ -1022,16 +1056,16 @@ the folder; the deepest match wins.
 <span class="c1">// index.wren</span>
 <span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 
-<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main&gt;</span>
-<span class="x">    &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;/main&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">))</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Welcome"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;h1&gt;Welcome&lt;/h1&gt;</span>
 <span class="p">)</span>
 <span class="sb">```</span>
 
 <span class="k">&gt; </span><span class="ge">**Pitfall:** if `Layout`'s methods are `static` (as above), call</span>
-<span class="k">&gt; </span><span class="ge">`Layout.render(...)` directly. If you instead define instance methods, you</span>
-<span class="k">&gt; </span><span class="ge">must instantiate first: `Layout.new().render(...)`.</span>
+<span class="k">&gt; </span><span class="ge">`Layout.page(...)` directly. If you instead define instance methods, you</span>
+<span class="k">&gt; </span><span class="ge">must instantiate first: `Layout.new().page(...)`.</span>
 
 <span class="gs">**Markup is not a string.**</span> Write the tags raw inside the method body, as in the
 example: don't concatenate fragments (<span class="sb">`"&lt;div&gt;" + value + "&lt;/div&gt;"`</span>) and don't
@@ -1039,6 +1073,83 @@ open a quoted string to hold markup for <span class="sb">`{{ }}`</span> (inside 
 literally, and a real newline there is a syntax error). Tags are balanced at
 compile time: a missing or an extra close tag is an error, and any tag may nest
 any other, including its own name.
+
+<span class="gu">### Components</span>
+
+A component is a class whose method returns an inline HTML block. There is no
+registry and no props object: pass the data as parameters and compose by calling
+one method from another inside <span class="sb">`{{ }}`</span>.
+
+<span class="sb">```wren</span>
+<span class="c1">// _app/components/cards.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cards</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class="card tool"&gt;</span>
+<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;p class="meta"&gt;</span><span class="nc">Wear</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"wear"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mf">100</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/article&gt;</span><span class="w"> </span><span class="p">}</span>
+
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">mission</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;li class="mission"&gt;</span>
+<span class="x">    &lt;a href="/mission?id={{ row["id"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;span class="reward"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"reward"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">gold</span><span class="x">&lt;/span&gt;</span>
+<span class="x">  &lt;/li&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="sb">```wren</span>
+<span class="c1">// _app/components/hud.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hud</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">state</span><span class="p">(</span><span class="n">game</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;aside class="hud"&gt;</span>
+<span class="x">    &lt;span&gt;</span><span class="nc">Day</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"day"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">    &lt;span&gt;</span><span class="nc">Fuel</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"fuel"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">    &lt;span&gt;</span><span class="nc">Credits</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"credits"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">  &lt;/aside&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="sb">```wren</span>
+<span class="c1">// _app/components/nav.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Nav</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">bar</span><span class="p">(</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;nav&gt;</span>
+<span class="x">    &lt;a href="/"&gt;</span><span class="nc">Dashboard</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href="/missions"&gt;</span><span class="nc">Missions</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    {{ user &amp;&amp; &lt;span class="who"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt; }}</span>
+<span class="x">  &lt;/nav&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+<span class="sb">```</span>
+
+<span class="sb">```wren</span>
+<span class="c1">// dashboard.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/template"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/hud"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Hud</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"userId"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">game</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT day, fuel, credits FROM games WHERE user_id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, wear FROM tools WHERE user_id = ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Dashboard"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;section class="dashboard"&gt;</span>
+<span class="x">    {{ Hud.state(game) }}</span>
+<span class="x">    &lt;div class="grid"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tools</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">  &lt;/section&gt;</span>
+<span class="p">)</span>
+<span class="sb">```</span>
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**Pass data in.**</span> A component takes a row, Map or string as a parameter. It
+  does not read <span class="sb">`Request`</span>, <span class="sb">`Session`</span> or the database: the route fetches and
+  decides, the component renders.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Compose through `{{ }}`.**</span> <span class="sb">`{{ Nav.bar(user) }}`</span> and
+  <span class="sb">`{{ tools.map { |t| Cards.tool(t) } }}`</span> are the whole composition mechanism.
+<span class="k">-</span><span class="w"> </span><span class="gs">**A component returns `HtmlNode`.**</span> Its markup is inserted as-is; plain values
+  interpolated inside it are still escaped.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Reuse, do not copy.**</span> A card, status bar or nav rendered by two pages is one
+  method called twice. <span class="sb">`Layout`</span> is a component too.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Start an HTML argument on a new line.**</span> <span class="sb">`Layout.page("X", null, &lt;main&gt;...)`</span>
+  is a parse error: after a comma the lexer reads <span class="sb">`&lt;`</span> as less-than. Put the
+  literal on the next line.
 
 <span class="gu">## Database</span>
 
@@ -1179,8 +1290,25 @@ Always pass <span class="sb">`LIMIT`</span>/<span class="sb">`OFFSET`</span> as 
 <span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"First post"</span><span class="p">,</span><span class="w"> </span><span class="s2">"content"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Hello world"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userId"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
 <span class="w">  </span><span class="sb">`posts`</span><span class="o">.</span><span class="n">save</span><span class="p">({</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Second post"</span><span class="p">,</span><span class="w"> </span><span class="s2">"content"</span><span class="o">:</span><span class="w"> </span><span class="s2">"More content"</span><span class="p">,</span><span class="w"> </span><span class="s2">"userId"</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="p">})</span>
 <span class="p">})</span>
+
+<span class="c1">// Or pass a list: each item is exactly one statement (no `;` split)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Index posts"</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="sb">`CREATE INDEX posts_title ON posts (title)`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`CREATE INDEX posts_user ON posts (userId)`</span>
+<span class="p">])</span>
 <span class="sb">```</span>
 
+<span class="k">-</span><span class="w"> </span>Each call is <span class="gs">**atomic**</span>: the statements and the version row commit together,
+  so a failed migration leaves no partial schema. Need <span class="sb">`VACUUM`</span>,
+  <span class="sb">`PRAGMA journal_mode`</span> or a <span class="sb">`PRAGMA foreign_keys = OFF`</span> rebuild? Pass <span class="sb">`false`</span>
+  as the third argument (<span class="sb">`Db.migrate(name, sql, false)`</span>). The statements then
+  run without the wrapping transaction, and a failure leaves the earlier ones
+  applied with no version row.
+<span class="k">-</span><span class="w"> </span>A backtick migration is split only on statement-ending <span class="sb">`;`</span>: semicolons inside
+  quotes, comments and <span class="sb">`CREATE TRIGGER ... BEGIN ...; ... END;`</span> stay put.
+<span class="k">-</span><span class="w"> </span>The version row stores a SHA-256 of the SQL. Editing an applied migration
+  logs a warning and does not run the new SQL; write a new migration instead.
+  A <span class="sb">`Fn`</span> migration stores no hash, so editing a callback is not detected.
 <span class="k">-</span><span class="w"> </span>Runs on every app start and every file update.
 <span class="k">-</span><span class="w"> </span>The migration <span class="gs">**name**</span> is the dedup key — it only runs once. Use a
   descriptive name.
@@ -1292,8 +1420,8 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="k">var</span><span class="w"> </span><span class="n">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">User</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
 
 <span class="c1">// === VIEW ===</span>
-<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span>
-<span class="w">  </span><span class="x">&lt;main&gt;</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Users"</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;section&gt;</span>
 <span class="x">    &lt;h1&gt;</span><span class="nc">Users</span><span class="x">&lt;/h1&gt;</span>
 <span class="x">    &lt;table&gt;</span>
 <span class="w">      </span><span class="x">&lt;thead&gt;&lt;tr&gt;&lt;th&gt;Name&lt;/th&gt;&lt;th&gt;Email&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;</span>
@@ -1306,7 +1434,7 @@ Each <span class="sb">`.wren`</span> page file is a controller: handle the reque
 <span class="x">      &lt;input type="email" name="email" required /&gt;</span>
 <span class="w">      </span><span class="x">&lt;button type="submit"&gt;Create User&lt;/button&gt;</span>
 <span class="w">    </span><span class="x">&lt;/form&gt;</span>
-<span class="x">  &lt;/main&gt;</span>
+<span class="x">  &lt;/section&gt;</span>
 <span class="p">)</span>
 <span class="sb">```</span>
 
@@ -1734,11 +1862,11 @@ behind a <span class="sb">`_`</span>/<span class="sb">`.`</span> prefix (those r
 <span class="sb">```wren</span>
 <span class="c1">// _app/template.wren</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">render</span><span class="p">(</span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">page</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
 <span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
 <span class="x">      &lt;head&gt;</span>
 <span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
-<span class="x">        &lt;title&gt;</span><span class="nc">Todo</span><span class="x">&lt;/title&gt;</span>
+<span class="x">        &lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;</span>
 <span class="x">      &lt;/head&gt;</span>
 <span class="w">      </span><span class="x">&lt;body&gt;</span>
 <span class="x">        &lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
@@ -1761,27 +1889,28 @@ behind a <span class="sb">`_`</span>/<span class="sb">`.`</span> prefix (those r
 
 <span class="k">var</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">list</span><span class="p">()</span>
 
-<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
-<span class="x">  &lt;h1&gt;</span><span class="nc">Todo</span><span class="w"> </span><span class="nc">List</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;form method="post"&gt;</span>
-<span class="w">    </span><span class="x">&lt;input name="description" placeholder="What needs to be done?" required /&gt;</span>
-<span class="x">    &lt;button type="submit"&gt;</span><span class="nc">Add</span><span class="x">&lt;/button&gt;</span>
-<span class="x">  &lt;/form&gt;</span>
-<span class="w">  </span><span class="x">&lt;ul&gt;</span>
-<span class="x">    {{ tasks.map{|task| &lt;li&gt;</span>
-<span class="w">      </span><span class="x">&lt;form method="post" action="/toggle" style="display:inline"&gt;</span>
-<span class="x">        &lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
-<span class="w">        </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
-<span class="w">      </span><span class="x">&lt;/form&gt;</span>
-<span class="x">      &lt;span class="{{ task.finished ? "done" : "" }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
-<span class="x">      &lt;form method="post" action="/delete" style="display:inline"&gt;</span>
-<span class="w">        </span><span class="x">&lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
-<span class="x">        &lt;button&gt;</span><span class="err">✕</span><span class="x">&lt;/button&gt;</span>
-<span class="x">      &lt;/form&gt;</span>
-<span class="w">    </span><span class="x">&lt;/li&gt;} }}</span>
-<span class="x">  &lt;/ul&gt;</span>
-<span class="w">  </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">isEmpty</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p&gt;No tasks yet. Add your first one above.&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
-<span class="x">&lt;/main&gt;)</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Todo List"</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;section&gt;</span>
+<span class="x">    &lt;h1&gt;</span><span class="nc">Todo</span><span class="w"> </span><span class="nc">List</span><span class="x">&lt;/h1&gt;</span>
+<span class="x">    &lt;form method="post"&gt;</span>
+<span class="w">      </span><span class="x">&lt;input name="description" placeholder="What needs to be done?" required /&gt;</span>
+<span class="x">      &lt;button type="submit"&gt;</span><span class="nc">Add</span><span class="x">&lt;/button&gt;</span>
+<span class="x">    &lt;/form&gt;</span>
+<span class="w">    </span><span class="x">&lt;ul&gt;</span>
+<span class="x">      {{ tasks.map{|task| &lt;li&gt;</span>
+<span class="w">        </span><span class="x">&lt;form method="post" action="/toggle" style="display:inline"&gt;</span>
+<span class="x">          &lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
+<span class="w">          </span><span class="x">&lt;button&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">finished</span><span class="w"> </span><span class="o">?</span><span class="w"> </span><span class="s2">"✓"</span><span class="w"> </span><span class="o">:</span><span class="w"> </span><span class="s2">"○"</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/button&gt;</span>
+<span class="w">        </span><span class="x">&lt;/form&gt;</span>
+<span class="x">        &lt;span class="{{ task.finished ? "done" : "" }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">task</span><span class="o">.</span><span class="n">description</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span>
+<span class="x">        &lt;form method="post" action="/delete" style="display:inline"&gt;</span>
+<span class="w">          </span><span class="x">&lt;input type="hidden" name="id" value="{{ task.id }}" /&gt;</span>
+<span class="x">          &lt;button&gt;</span><span class="err">✕</span><span class="x">&lt;/button&gt;</span>
+<span class="x">        &lt;/form&gt;</span>
+<span class="w">      </span><span class="x">&lt;/li&gt;} }}</span>
+<span class="x">    &lt;/ul&gt;</span>
+<span class="w">    </span><span class="si">{{</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">isEmpty</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;p&gt;No tasks yet. Add your first one above.&lt;/p&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">  </span><span class="x">&lt;/section&gt;)</span>
 <span class="sb">```</span>
 
 <span class="sb">```wren</span>
@@ -1811,15 +1940,30 @@ bialet<span class="w"> </span>-T<span class="w">            </span><span class="
 bialet<span class="w"> </span>-T<span class="w"> </span>-q<span class="w">         </span><span class="c1"># quiet, CI-friendly</span>
 <span class="sb">```</span>
 
-The runner prepends its own prelude, which defines <span class="sb">`Test`</span> and <span class="sb">`Tests`</span>. Never
-import them, and do not check a <span class="sb">`_tests/*.wren`</span> file with <span class="sb">`bialet -t`</span>: outside
-the runner the prelude does not exist, so the compiler reports
-<span class="sb">`Test: Variable is used but not defined`</span>. The tree walk (<span class="sb">`bialet check`</span>) skips
-<span class="sb">`_tests/`</span> for that reason; a test file is checked by running the suite.
+The runner prepends its own prelude, which defines <span class="sb">`Test`</span>, <span class="sb">`Tests`</span> and
+<span class="sb">`Fixture`</span>. Never import them, and do not check a <span class="sb">`_tests/*.wren`</span> file with
+<span class="sb">`bialet -t`</span>: outside the runner the prelude does not exist, so the compiler
+reports <span class="sb">`Test: Variable is used but not defined`</span>. The tree walk (<span class="sb">`bialet check`</span>)
+skips <span class="sb">`_tests/`</span> for that reason; a test file is checked by running the suite.
 
-<span class="sb">`_tests/_init.wren`</span>, when present, runs once before every test file: seed rows
-and set configuration there. Its variables are global to every test file, so
-give them unique names and do not collide with <span class="sb">`UNIQUE`</span> keys.
+Each test file is its own module: relative imports resolve from <span class="sb">`_tests/`</span>, and
+the variables <span class="sb">`_init.wren`</span> declares stay visible in the file.
+
+<span class="sb">```wren</span>
+<span class="c1">// _tests/cards.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"../_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">html</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">({</span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Hammer"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wear"</span><span class="o">:</span><span class="w"> </span><span class="s2">"40"</span><span class="p">})</span><span class="o">.</span><span class="n">toString</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">html</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hammer"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the card renders its name"</span><span class="p">)</span>
+<span class="sb">```</span>
+
+A component returns <span class="sb">`HtmlNode`</span>; call <span class="sb">`.toString`</span> before asserting on the markup.
+
+<span class="sb">`_tests/_init.wren`</span>, when present, runs before every test file, inside that
+file's database savepoint: seed rows and set configuration there, and keep its
+top-level <span class="sb">`var`</span> names unique. Each file starts from the migrated database plus
+what <span class="sb">`_init.wren`</span> seeds, and everything it writes is rolled back when the file
+ends — file order does not matter.
 
 <span class="sb">```wren</span>
 <span class="c1">// _tests/tasks.wren</span>
@@ -1828,14 +1972,33 @@ give them unique names and do not collide with <span class="sb">`UNIQUE`</span> 
 <span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/"</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Comprar pan"</span><span class="p">)</span>
 <span class="sb">```</span>
 
+<span class="sb">`Fixture`</span> builds a request without the router, for code that reads <span class="sb">`Request`</span> or
+<span class="sb">`Session`</span>. Call <span class="sb">`apply()`</span>, then assert on <span class="sb">`status`</span>, <span class="sb">`body`</span> or <span class="sb">`headers`</span>:
+
+<span class="sb">```wren</span>
+<span class="k">var</span><span class="w"> </span><span class="n">fixture</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Fixture</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Buy bread"</span><span class="p">})</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+
+<span class="nc">Tasks</span><span class="o">.</span><span class="n">create</span><span class="p">()</span><span class="w">   </span><span class="c1">// imported code reads Request.post(...)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">fixture</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">302</span><span class="p">,</span><span class="w"> </span><span class="s2">"the POST redirects"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">fixture</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"location"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="s2">"it redirects to the list"</span><span class="p">)</span>
+<span class="sb">```</span>
+
+<span class="k">-</span><span class="w"> </span><span class="gs">**Stub outbound HTTP.**</span> <span class="sb">`Test.stubHttp(url, {...})`</span> replaces the response for
+  a matching URL; stubs are process-wide, so routes see them. Read
+  <span class="sb">`Test.httpCalls`</span> and clear them with <span class="sb">`Test.clearHttpStubs()`</span>. An unmatched URL
+  hits the real network.
+<span class="k">-</span><span class="w"> </span><span class="gs">**Freeze time, seed randomness.**</span> <span class="sb">`Test.freezeTime(epoch)`</span> (or a <span class="sb">`Date`</span>, or
+  <span class="sb">`"YYYY-MM-DD HH:MM:SS"`</span>), <span class="sb">`Test.unfreezeTime()`</span>, <span class="sb">`Test.randomSeed(n)`</span>,
+  <span class="sb">`Test.randomSeed()`</span>. Both reset before every file. <span class="sb">`freezeTime`</span> does not
+  affect SQLite <span class="sb">`datetime('now')`</span>.
 <span class="k">-</span><span class="w"> </span>Assert the flow the user asked for: a POST that writes, then a GET that reads
   the same value back. A page that renders is not a flow that works.
 <span class="k">-</span><span class="w"> </span>Add a boundary case (empty table, today against a future date, the first and
   last day of a month) instead of one mid-month date.
 <span class="k">-</span><span class="w"> </span><span class="sb">`Test.headers`</span> does not exist: drop the header and assert the rest, or gate
   the check on <span class="sb">`Config.get("test_mode")`</span> set in <span class="sb">`_init.wren`</span>.
-<span class="k">-</span><span class="w"> </span>Every file shares one temporary database per run: do not assume isolation,
-  and never weaken an assertion to make a red test go green.
+<span class="k">-</span><span class="w"> </span>Never weaken an assertion to make a red test go green.
 <span class="k">-</span><span class="w"> </span>Keep the suite quiet: no <span class="sb">`System.print`</span> of whole tables and no leftover
   <span class="sb">`debug*.wren`</span> files.
 
@@ -1853,7 +2016,8 @@ bialet<span class="w"> </span>-T<span class="w">                         </span>
 <span class="gu">## Summary</span>
 
 <span class="k">1.</span> <span class="gs">**Code Style**</span>: 2-space indentation, single-line methods when possible
-<span class="k">2.</span> <span class="gs">**Structure**</span>: <span class="sb">`_app/`</span> folder for template, migrations, and domain classes
+<span class="k">2.</span> <span class="gs">**Structure**</span>: <span class="sb">`_app/`</span> folder for the template, components, migrations and
+   domain classes; route files stay thin
 <span class="k">3.</span> <span class="gs">**No extra folders**</span>: no <span class="sb">`routes/`</span>, <span class="sb">`validators/`</span>, <span class="sb">`middleware/`</span>, <span class="sb">`static/`</span>
 <span class="k">4.</span> <span class="gs">**Routing**</span>: query parameters by default (<span class="sb">`Request.get`</span>); <span class="sb">`&lt;folder&gt;.wren`</span> +
    <span class="sb">`Request.route(n)`</span> only for path-based URLs, as an exception
@@ -1871,8 +2035,9 @@ bialet<span class="w"> </span>-T<span class="w">                         </span>
     CSS file (or a classless framework such as µCSS or Beak CSS) only when the
     page needs presentation
 <span class="k">13.</span> <span class="gs">**Tests**</span>: <span class="sb">`_tests/`</span> with the fluent <span class="sb">`Test.get/post`</span> API, run with
-    <span class="sb">`bialet -T`</span>; <span class="sb">`Test`</span> comes from the runner, so never import it or validate a
-    test file with <span class="sb">`bialet -t`</span>
+    <span class="sb">`bialet -T`</span>; each file is its own module with its own database savepoint,
+    and <span class="sb">`Test`</span>, <span class="sb">`Tests`</span> and <span class="sb">`Fixture`</span> come from the runner, so never import
+    them or validate a test file with <span class="sb">`bialet -t`</span>
 </pre></div>
 </div>
 </section>

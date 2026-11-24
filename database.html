@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'database';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="8. Results" href="getting-started/8-results.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -450,6 +450,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-sql-pitfall">Migration SQL Pitfall</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atomic-migrations">Atomic migrations</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>
@@ -844,6 +845,10 @@ ignores missing table and column errors, so a <code class="docutils literal notr
 <code class="docutils literal notranslate"><span class="pre">INSERT</span></code> still passes on a fresh database. While drafting a migration, serve
 with <code class="docutils literal notranslate"><span class="pre">--no-watch</span></code> to stop the save-triggered run, check the file with <code class="docutils literal notranslate"><span class="pre">-t</span></code>, then
 restart the server to apply it.</p>
+<p>Under <code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code>, the runner applies the migrations once before any test file,
+then runs each file inside a savepoint that is rolled back when the file
+finishes. Nothing a test writes survives the run, so a test is free to change
+rows. See <a class="reference internal" href="tests.html#id2"><span class="std std-ref">Testing in Bialet</span></a>.</p>
 <section id="migration-sql-pitfall">
 <h3>Migration SQL Pitfall<a class="headerlink" href="#migration-sql-pitfall" title="Link to this heading">#</a></h3>
 <blockquote>
@@ -870,7 +875,71 @@ left incomplete.</p>
 </div>
 <p>The name of the migration is used to avoid repeating migrations. Use a
 descriptive name.</p>
-<p>You can have multiples queries separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>.</p>
+<p>You can have multiples queries separated by <code class="docutils literal notranslate"><span class="pre">;</span></code>. The split honours SQL syntax:
+a <code class="docutils literal notranslate"><span class="pre">;</span></code> inside <code class="docutils literal notranslate"><span class="pre">'a;b'</span></code>, <code class="docutils literal notranslate"><span class="pre">&quot;an;identifier&quot;</span></code>, <code class="docutils literal notranslate"><span class="pre">[a;b]</span></code>, a <code class="docutils literal notranslate"><span class="pre">--</span> <span class="pre">comment</span></code>, a
+<code class="docutils literal notranslate"><span class="pre">/*</span> <span class="pre">block</span> <span class="pre">comment</span> <span class="pre">*/</span></code> or a <code class="docutils literal notranslate"><span class="pre">CREATE</span> <span class="pre">TRIGGER</span> <span class="pre">...</span> <span class="pre">BEGIN</span> <span class="pre">...;</span> <span class="pre">...</span> <span class="pre">END;</span></code> body does
+not end a statement.</p>
+</section>
+<section id="atomic-migrations">
+<h3>Atomic migrations<a class="headerlink" href="#atomic-migrations" title="Link to this heading">#</a></h3>
+<p>Every <code class="docutils literal notranslate"><span class="pre">Db.migrate</span></code> call runs as one unit. The statements and the row in
+<code class="docutils literal notranslate"><span class="pre">BIALET_MIGRATIONS</span></code> commit together, so a migration that fails leaves nothing
+behind: no table, no half-copied column and no version row. Fix the SQL and
+restart; the migration runs again from the start.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add note"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  CREATE TABLE note (id INTEGER PRIMARY KEY, body TEXT);</span>
+<span class="sb">  INSERT INTO note (body) VALUES ('first');</span>
+<span class="sb">`</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Two workers starting at the same time serialize on the write lock, and the
+second one finds the version row and does nothing. Each call is atomic on its
+own, but the order in which two processes apply different migrations is not
+guaranteed, so start multiple workers one at a time.</p>
+<p>A migration that can only run outside a transaction takes <code class="docutils literal notranslate"><span class="pre">false</span></code> as the third
+argument:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Reclaim space"</span><span class="p">,</span><span class="w"> </span><span class="sb">`VACUUM`</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+<span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Rebuild note"</span><span class="p">,</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">  PRAGMA foreign_keys = OFF;</span>
+<span class="sb">  CREATE TABLE note_new (id INTEGER PRIMARY KEY, body TEXT);</span>
+<span class="sb">  INSERT INTO note_new SELECT id, body FROM note;</span>
+<span class="sb">  DROP TABLE note;</span>
+<span class="sb">  ALTER TABLE note_new RENAME TO note;</span>
+<span class="sb">  PRAGMA foreign_keys = ON;</span>
+<span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>That is the whole escape hatch. <code class="docutils literal notranslate"><span class="pre">VACUUM</span></code>, a change of <code class="docutils literal notranslate"><span class="pre">PRAGMA</span> <span class="pre">journal_mode</span></code> and
+the <code class="docutils literal notranslate"><span class="pre">PRAGMA</span> <span class="pre">foreign_keys</span> <span class="pre">=</span> <span class="pre">OFF</span></code> table rebuild cannot run inside a transaction;
+SQLite either rejects them or, for the foreign-key pragma, silently ignores the
+change. With <code class="docutils literal notranslate"><span class="pre">false</span></code> the statements and the version row run one at a time, so a
+failure leaves the statements that already ran applied and no version row.
+Re-running after the fix repeats them. Accept that risk deliberately; prefer
+<code class="docutils literal notranslate"><span class="pre">true</span></code> (the default) for everything else.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: a migration name is the dedup key, not a version you bump. Editing
+an already-applied migration does not re-run it and does not undo it. Write a
+new migration with a new name, or restore the backup.</p>
+</div></blockquote>
+<p>The version row also stores a SHA-256 hash of the migration SQL. Editing an
+applied migration logs:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Warning</span><span class="o">:</span><span class="w"> </span><span class="n">migration</span><span class="w"> </span><span class="s1">'Add note'</span><span class="w"> </span><span class="n">changed</span><span class="w"> </span><span class="n">after</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">was</span><span class="w"> </span><span class="n">applied</span><span class="err">;</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">new</span><span class="w"> </span><span class="nc">SQL</span><span class="w"> </span><span class="n">will</span><span class="w"> </span><span class="n">not</span><span class="w"> </span><span class="n">run</span><span class="o">.</span>
+</pre></div>
+</div>
+<p>The SQL does not run again — running an edited migration on a database that
+already holds the first version’s effects is unsafe. The hash covers the SQL
+exactly as written, so whitespace and comment edits are detected too. A <code class="docutils literal notranslate"><span class="pre">Fn</span></code>
+callback has no SQL text and stores no hash, so editing a callback is not
+detected. Rows from older binaries have no hash; the next boot fills it in
+without a warning.</p>
+<p>A list applies each item as one statement, with no further split. Use it when a
+statement legitimately contains <code class="docutils literal notranslate"><span class="pre">;</span></code> or when you want the statements kept apart:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Seed config"</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<span class="w">  </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES ('title', 'Bialet example page')`</span><span class="p">,</span>
+<span class="w">  </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES ('perPage', '10')`</span>
+<span class="p">])</span>
+</pre></div>
+</div>
 <p>Use migration to insert non-transactional data. You can interact with the
 <code class="docutils literal notranslate"><span class="pre">BIALET_*</span></code> tables.</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Db</span><span class="o">.</span><span class="n">migrate</span><span class="p">(</span><span class="s2">"Add default title"</span><span class="p">,</span><span class="w"> </span><span class="sb">`INSERT INTO BIALET_CONFIG VALUES ('title', 'Bialet example page')`</span><span class="p">)</span>
@@ -958,6 +1027,7 @@ modifier. See <a class="reference internal" href="datetime.html#stored-timestamp
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#data-types-and-blob-support">Data Types and BLOB Support</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#migrations">Migrations</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#migration-sql-pitfall">Migration SQL Pitfall</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#atomic-migrations">Atomic migrations</a></li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bialet-tables">Bialet tables</a></li>

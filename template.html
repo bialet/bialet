@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'template';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Date and Time Functions" href="datetime.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -482,6 +482,17 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-classes-components">Template Classes / Components</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout-template">Layout template</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-template">Using the template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-component-set">A component set</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-route-that-renders-them">The route that renders them</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-markup-in-a-second-page">The same markup in a second page</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pass-data-in-do-not-fetch-it-inside">Pass data in, do not fetch it inside</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-components-pure">Keep components pure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#static-or-instance-methods">Static or instance methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#looping-over-rows">Looping over rows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping">Escaping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-component-files-live">Where component files live</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#structuring-a-larger-app">Structuring a larger app</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-have-components">Does Bialet have components?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Pitfalls</a></li>
 </ul>
 </li>
@@ -1146,8 +1157,21 @@ the redirect and no body is sent:</p>
 <hr class="docutils" />
 <section id="template-classes-components">
 <h2>Template Classes / Components<a class="headerlink" href="#template-classes-components" title="Link to this heading">#</a></h2>
+<p>A component is a Wren class with a method that returns an inline HTML block.
+You compose markup by calling one method from another inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>. That is
+the entire mechanism: no registry, no props object, no separate template file.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Badge</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">rule</span><span class="p">(</span><span class="n">text</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;span class="badge"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">text</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;p&gt;Status: {{ Badge.rule("ready") }}&lt;/p&gt;</span>
+</pre></div>
+</div>
 <p>Extract shared HTML into Wren classes. Each method returns an inline HTML
-string, turning your class into a library of reusable components.</p>
+string, turning your class into a library of reusable components. A layout is
+the first component of every page, not a special mechanism: <code class="docutils literal notranslate"><span class="pre">layout(content)</span></code>
+returns a page and takes the body as a parameter. Every smaller piece follows
+the same shape.</p>
 <section id="layout-template">
 <h3>Layout template<a class="headerlink" href="#layout-template" title="Link to this heading">#</a></h3>
 <p>Create <code class="docutils literal notranslate"><span class="pre">_template.wren</span></code> and import it from your pages:</p>
@@ -1191,12 +1215,340 @@ string, turning your class into a library of reusable components.</p>
 
 <span class="k">return</span><span class="w"> </span><span class="nc">Template</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">layout</span><span class="p">(</span><span class="x">&lt;main&gt;</span>
 <span class="x">  &lt;h1&gt;</span><span class="nc">Welcome</span><span class="x">&lt;/h1&gt;</span>
-<span class="x">  &lt;p&gt;</span><span class="nc">This</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="n">goes</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+<span class="x">  &lt;p&gt;</span><span class="nc">This</span><span class="w"> </span><span class="n">body</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="n">passed</span><span class="w"> </span><span class="n">to</span><span class="w"> </span><span class="n">layout</span><span class="p">()</span><span class="w"> </span><span class="n">and</span><span class="w"> </span><span class="n">inserted</span><span class="w"> </span><span class="n">into</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">page</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
 <span class="x">&lt;/main&gt;)</span>
 </pre></div>
 </div>
 <p>A Wren block that contains a single expression implicitly returns that
 expression — no <code class="docutils literal notranslate"><span class="pre">return</span></code> keyword needed in the method body.</p>
+</section>
+<section id="a-component-set">
+<h3>A component set<a class="headerlink" href="#a-component-set" title="Link to this heading">#</a></h3>
+<p>Split the page by region: one class per region, one file per class. The
+<code class="docutils literal notranslate"><span class="pre">_app/components/</span></code> folder is a convention, not a framework requirement —
+anything behind a <code class="docutils literal notranslate"><span class="pre">_</span></code> path segment is importable and is never served.</p>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-app/
+├── _app/
+│   ├── components/
+│   │   ├── cards.wren      # Cards.tool, Cards.mission
+│   │   ├── hud.wren        # Hud.state
+│   │   ├── nav.wren        # Nav.bar
+│   │   └── layout.wren     # Layout.page
+│   ├── domain.wren
+│   └── migration.wren
+├── dashboard.wren          # /
+└── missions.wren           # /missions
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/cards.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cards</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="c1">// One tool in the grid: name, wear, and a warning when it is broken.</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class="card tool"&gt;</span>
+<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;p class="meta"&gt;</span><span class="nc">Wear</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"wear"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mf">100</span><span class="x">&lt;/p&gt;</span>
+<span class="x">    {{ item["broken"] == "1" &amp;&amp; &lt;p class="warn"&gt;</span><span class="nc">Broken</span><span class="o">.</span><span class="w"> </span><span class="nc">Repair</span><span class="w"> </span><span class="n">it</span><span class="w"> </span><span class="n">before</span><span class="w"> </span><span class="n">the</span><span class="w"> </span><span class="n">next</span><span class="w"> </span><span class="n">run</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">  </span><span class="x">&lt;/article&gt; }</span>
+
+<span class="x">  // One mission row: link and reward.</span>
+<span class="x">  static mission(row) { &lt;li class="mission"&gt;</span>
+<span class="w">    </span><span class="x">&lt;a href="/mission?id={{ row["id"] }}"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/a&gt;</span>
+<span class="w">    </span><span class="x">&lt;span class="reward"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"reward"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x"> gold&lt;/span&gt;</span>
+<span class="w">  </span><span class="x">&lt;/li&gt; }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/hud.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Hud</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">state</span><span class="p">(</span><span class="n">game</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;aside class="hud"&gt;</span>
+<span class="x">    &lt;dl class="hud-facts"&gt;</span>
+<span class="w">      </span><span class="x">&lt;dt&gt;Day&lt;/dt&gt;&lt;dd&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"day"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/dd&gt;</span>
+<span class="w">      </span><span class="x">&lt;dt&gt;Fuel&lt;/dt&gt;&lt;dd&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"fuel"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x"> of 100&lt;/dd&gt;</span>
+<span class="w">      </span><span class="x">&lt;dt&gt;Credits&lt;/dt&gt;&lt;dd&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">game</span><span class="p">[</span><span class="s2">"credits"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/dd&gt;</span>
+<span class="w">    </span><span class="x">&lt;/dl&gt;</span>
+<span class="x">    {{ Num.fromString(game["fuel"]) &lt; 20 &amp;&amp; &lt;p class="warn"&gt;</span><span class="nc">Fuel</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="n">low</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
+<span class="w">  </span><span class="x">&lt;/aside&gt; }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/nav.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Nav</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">bar</span><span class="p">(</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;nav class="bar" aria-label="Main"&gt;</span>
+<span class="x">    &lt;a class="brand" href="/"&gt;</span><span class="nc">Salvage</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href="/"&gt;</span><span class="nc">Dashboard</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    &lt;a href="/missions"&gt;</span><span class="nc">Missions</span><span class="x">&lt;/a&gt;</span>
+<span class="x">    {{ user &amp;&amp; &lt;span class="who"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt; }}</span>
+<span class="x">  &lt;/nav&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/layout.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/components/nav"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Nav</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">page</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
+<span class="x">      &lt;head&gt;</span>
+<span class="w">        </span><span class="x">&lt;meta charset="utf-8" /&gt;</span>
+<span class="x">        &lt;meta name="viewport" content="width=device-width, initial-scale=1" /&gt;</span>
+<span class="w">        </span><span class="x">&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x"> · Salvage&lt;/title&gt;</span>
+<span class="w">        </span><span class="x">&lt;link rel="stylesheet" href="/style.css" /&gt;</span>
+<span class="x">      &lt;/head&gt;</span>
+<span class="w">      </span><span class="x">&lt;body&gt;</span>
+<span class="x">        {{ Nav.bar(user) }}</span>
+<span class="x">        &lt;main&gt;</span>
+<span class="w">          </span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;/main&gt;</span>
+<span class="x">      &lt;/body&gt;</span>
+<span class="w">    </span><span class="x">&lt;/html&gt; }</span>
+<span class="x">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Layout.page</span></code> is a component like any other. It calls <code class="docutils literal notranslate"><span class="pre">Nav.bar</span></code> from inside its
+own markup, and that is how nesting works: a method call inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>.</p>
+</section>
+<section id="the-route-that-renders-them">
+<h3>The route that renders them<a class="headerlink" href="#the-route-that-renders-them" title="Link to this heading">#</a></h3>
+<p>The route reads input, fetches the rows, and passes them in. It holds no markup
+beyond the sections the page itself is made of.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// dashboard.wren — GET /</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/layout"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/hud"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Hud</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"user_id"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">game</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT day, fuel, credits FROM games WHERE user_id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">game</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">notFound</span><span class="p">()</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">tools</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name, wear, broken FROM tools WHERE user_id = ?`</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="n">user</span><span class="p">[</span><span class="s2">"id"</span><span class="p">])</span>
+<span class="k">var</span><span class="w"> </span><span class="n">missions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, title, reward FROM missions ORDER BY reward DESC LIMIT 3`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Dashboard"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;section class="dashboard"&gt;</span>
+<span class="x">    {{ Hud.state(game) }}</span>
+<span class="x">    &lt;h2&gt;</span><span class="nc">Tools</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">    &lt;div class="grid"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tools</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+<span class="x">    &lt;h2&gt;</span><span class="nc">Next</span><span class="w"> </span><span class="n">missions</span><span class="x">&lt;/h2&gt;</span>
+<span class="x">    &lt;ul class="missions"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">missions</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">mission</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="x">  &lt;/section&gt;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="the-same-markup-in-a-second-page">
+<h3>The same markup in a second page<a class="headerlink" href="#the-same-markup-in-a-second-page" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">missions.wren</span></code> renders the same mission rows. It calls the same method instead
+of repeating the <code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// missions.wren — GET /missions</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/layout"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"user_id"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, name FROM users WHERE id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">userId</span><span class="p">)</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">user</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/login"</span><span class="p">)</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">missions</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT id, title, reward FROM missions ORDER BY reward DESC`</span><span class="o">.</span><span class="n">fetch</span>
+
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Missions"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;ul class="missions"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">missions</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">m</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">mission</span><span class="p">(</span><span class="n">m</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/ul&gt;</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<p>A third page that needs the row is a third call. The <code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code> exists once.</p>
+</section>
+<section id="pass-data-in-do-not-fetch-it-inside">
+<h3>Pass data in, do not fetch it inside<a class="headerlink" href="#pass-data-in-do-not-fetch-it-inside" title="Link to this heading">#</a></h3>
+<p>Components take what they render as parameters — a row, a Map, a string, a
+number. The route decides which row that is.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span><span class="w">   </span><span class="c1">// the row arrives as a parameter</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the component owns a session lookup, a query and an id</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cards</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">tool</span><span class="p">(</span><span class="n">id</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">userId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">new</span><span class="p">()</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"user_id"</span><span class="p">)</span>
+<span class="w">    </span><span class="k">var</span><span class="w"> </span><span class="n">item</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="sb">`SELECT * FROM tools WHERE id = ? AND user_id = ?`</span><span class="o">.</span><span class="n">first</span><span class="p">(</span><span class="n">id</span><span class="p">,</span><span class="w"> </span><span class="n">userId</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="x">&lt;article class="card tool"&gt;</span>
+<span class="x">      &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;/article&gt;</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The second version cannot be reused on a page that already has the row, runs a
+query in the middle of rendering, and fails when there is no request behind it —
+in a unit test or a cron job, for example. See <a class="reference internal" href="tests.html"><span class="std std-doc">Testing</span></a> for the
+white-box pattern.</p>
+</section>
+<section id="keep-components-pure">
+<h3>Keep components pure<a class="headerlink" href="#keep-components-pure" title="Link to this heading">#</a></h3>
+<p>A component renders its parameters and may call other components. It does not:</p>
+<ul class="simple">
+<li><p>read <code class="docutils literal notranslate"><span class="pre">Request</span></code>, <code class="docutils literal notranslate"><span class="pre">Session</span></code>, <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> or <code class="docutils literal notranslate"><span class="pre">Config</span></code></p></li>
+<li><p>run SQL or write to the database</p></li>
+<li><p>set <code class="docutils literal notranslate"><span class="pre">Response.status</span></code>, redirect, or return a response object</p></li>
+</ul>
+<p>The route does the rest: read input, fetch, decide (404, redirect, empty
+state), then render. A pure component can be called with a plain Map in a test
+and reused by any route that has the same data.</p>
+</section>
+<section id="static-or-instance-methods">
+<h3>Static or instance methods<a class="headerlink" href="#static-or-instance-methods" title="Link to this heading">#</a></h3>
+<p>Use <code class="docutils literal notranslate"><span class="pre">static</span></code> when the component carries no state: <code class="docutils literal notranslate"><span class="pre">Cards.tool(item)</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Hud.state(game)</span></code>, <code class="docutils literal notranslate"><span class="pre">Nav.bar(user)</span></code>.</p>
+<p>Use instance methods when the class is configured once and read by several
+methods — the <code class="docutils literal notranslate"><span class="pre">Template</span></code> example above stores <code class="docutils literal notranslate"><span class="pre">_title</span></code> and <code class="docutils literal notranslate"><span class="pre">_subtitle</span></code> in the
+constructor. Then instantiate it in the route and call the methods on the
+instance.</p>
+<p>Both styles are fine. Do not mix them in one class for no reason.</p>
+</section>
+<section id="looping-over-rows">
+<h3>Looping over rows<a class="headerlink" href="#looping-over-rows" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">map</span></code> turns a list of rows into a list of components. Interpolation flattens
+the list into markup:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;div class="grid"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tools</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>The block body is a single expression. <code class="docutils literal notranslate"><span class="pre">Cards.tool(t)</span></code> is code, not an HTML
+literal, so it must stay on the <code class="docutils literal notranslate"><span class="pre">{</span></code> line. A body that starts on the next line is
+a statement list: it returns <code class="docutils literal notranslate"><span class="pre">null</span></code>, the interpolation renders nothing, and the
+compiler warns.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — the call starts on the next line</span>
+<span class="x">&lt;div class="grid"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tools</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span>
+<span class="w">  </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+<span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+
+<span class="c1">// Correct</span>
+<span class="x">&lt;div class="grid"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">tools</span><span class="o">.</span><span class="n">map</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="o">|</span><span class="n">t</span><span class="o">|</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">t</span><span class="p">)</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/div&gt;</span>
+</pre></div>
+</div>
+<p>The same rule keeps <code class="docutils literal notranslate"><span class="pre">var</span></code> out of the block: format the value in the domain
+class or before the template.</p>
+<p>An empty list renders nothing. Pair it with an empty state:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main&gt;</span>
+<span class="x">  {{ tools.isEmpty &amp;&amp; &lt;p class="empty"&gt;</span><span class="nc">No</span><span class="w"> </span><span class="n">tools</span><span class="w"> </span><span class="n">yet</span><span class="o">.</span><span class="w"> </span><span class="nc">Craft</span><span class="w"> </span><span class="n">one</span><span class="w"> </span><span class="n">first</span><span class="o">.&lt;/</span><span class="n">p</span><span class="o">&gt;</span><span class="w"> </span><span class="p">}}</span>
+<span class="x">&lt;/main&gt;</span>
+</pre></div>
+</div>
+</section>
+<section id="escaping">
+<h3>Escaping<a class="headerlink" href="#escaping" title="Link to this heading">#</a></h3>
+<p>Interpolation escapes plain values. A component returns <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> — the type
+of every inline HTML literal — so interpolation inserts it as markup:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span><span class="w">   </span><span class="c1">// the component's markup, rendered</span>
+<span class="x">&lt;p&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/p&gt;</span><span class="w">             </span><span class="c1">// a value, escaped</span>
+</pre></div>
+</div>
+<p>Inside the component, every database value still goes through <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> and is
+escaped once. The only raw part is the tags you wrote yourself.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: never assemble markup as a string and mark it safe. The
+concatenation loses the compile-time tag checks, and <code class="docutils literal notranslate"><span class="pre">.raw</span></code> turns the user
+data embedded in it into markup:</p>
+</div></blockquote>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — XSS in one line</span>
+<span class="k">static</span><span class="w"> </span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="s2">"&lt;article&gt;"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"&lt;/article&gt;"</span><span class="p">)</span><span class="o">.</span><span class="n">raw</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code> and <code class="docutils literal notranslate"><span class="pre">.raw</span></code> assert that a string is already safe; they do not sanitize
+it. See <a class="reference internal" href="security.html"><span class="std std-doc">Security</span></a> for the full rules.</p>
+</section>
+<section id="where-component-files-live">
+<h3>Where component files live<a class="headerlink" href="#where-component-files-live" title="Link to this heading">#</a></h3>
+<p>A component file lives behind a <code class="docutils literal notranslate"><span class="pre">_</span></code> path segment: it is importable, and
+requesting it over HTTP returns 403. <code class="docutils literal notranslate"><span class="pre">_app/components/cards.wren</span></code> and
+<code class="docutils literal notranslate"><span class="pre">_cards.wren</span></code> both qualify; that is all a component file needs.</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">_app/components/cards.wren</span></code> — one class per file, one file per region of the
+page. The folder name is yours; this is a convention.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_components/cards.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">_cards.wren</span></code> at the app root — the same thing,
+flatter.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">_template.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">_app/template.wren</span></code> — one file with the layout and a few
+helpers, for a small app.</p></li>
+</ul>
+<p>Import paths are relative to the importing file:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// dashboard.wren (app root)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+
+<span class="c1">// admin/index.wren (one level down)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
+
+<span class="c1">// _app/components/layout.wren (inside the folder)</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/components/nav"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Nav</span>
+</pre></div>
+</div>
+<p>The leading <code class="docutils literal notranslate"><span class="pre">/</span></code> form resolves from the app root from any directory. Use it
+inside <code class="docutils literal notranslate"><span class="pre">_app/</span></code> and in other subfolders. Without the slash, the path starts at
+the importing file’s directory and works only from the root.</p>
+</section>
+<section id="structuring-a-larger-app">
+<h3>Structuring a larger app<a class="headerlink" href="#structuring-a-larger-app" title="Link to this heading">#</a></h3>
+<div class="highlight-text notranslate"><div class="highlight"><pre><span></span>my-app/
+├── _app/                    # never served: template, domain, data
+│   ├── components/          # UI: one class per concern
+│   │   ├── layout.wren
+│   │   ├── nav.wren
+│   │   ├── hud.wren
+│   │   └── cards.wren
+│   ├── domain.wren          # data and rules
+│   ├── migration.wren
+│   └── cron.wren
+├── dashboard.wren           # routes: read input -&gt; call domain -&gt; render
+└── missions.wren
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><strong><code class="docutils literal notranslate"><span class="pre">_app/</span></code> holds everything that is not served.</strong> Template and components,
+domain classes, migration, cron. Route files stay at the root, or in the
+folder that matches their URL.</p></li>
+<li><p><strong>One class per UI concern.</strong> <code class="docutils literal notranslate"><span class="pre">Cards</span></code>, <code class="docutils literal notranslate"><span class="pre">Hud</span></code>, <code class="docutils literal notranslate"><span class="pre">Nav</span></code>, <code class="docutils literal notranslate"><span class="pre">Layout</span></code>. When a template
+class grows a second region’s markup, split it by concern — do not keep adding
+methods to one god <code class="docutils literal notranslate"><span class="pre">Template</span></code>.</p></li>
+<li><p><strong>A route file is a controller.</strong> Read input, call the domain, render a
+component. If a route contains a <code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code> that another route also needs, the
+<code class="docutils literal notranslate"><span class="pre">&lt;li&gt;</span></code> is in the wrong place.</p></li>
+<li><p><strong>A rule belongs to the domain, a tag belongs to the component.</strong>
+<code class="docutils literal notranslate"><span class="pre">game.fuelLow</span></code>, <code class="docutils literal notranslate"><span class="pre">Mission.upcoming(limit)</span></code> and <code class="docutils literal notranslate"><span class="pre">Tool.wearLabel</span></code> are domain
+members; <code class="docutils literal notranslate"><span class="pre">Hud.state</span></code> and <code class="docutils literal notranslate"><span class="pre">Cards.tool</span></code> only render them.</p></li>
+<li><p><strong>A presentation helper used by two components is a component method.</strong> A rule
+used by two routes is a domain method.</p></li>
+</ul>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>The helper…</p></th>
+<th class="head"><p>Goes in</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>formats or decides a value (<code class="docutils literal notranslate"><span class="pre">fuelLow</span></code>, <code class="docutils literal notranslate"><span class="pre">rewardLabel</span></code>)</p></td>
+<td><p>the domain class</p></td>
+</tr>
+<tr class="row-odd"><td><p>emits tags (a badge, an avatar, a formatted row)</p></td>
+<td><p>a component method</p></td>
+</tr>
+<tr class="row-even"><td><p>fetches rows for a page</p></td>
+<td><p>the route, or a <code class="docutils literal notranslate"><span class="pre">static</span></code> domain method</p></td>
+</tr>
+<tr class="row-odd"><td><p>checks a permission</p></td>
+<td><p>a domain or <code class="docutils literal notranslate"><span class="pre">Auth</span></code>-style class, called by the route</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="does-bialet-have-components">
+<h3>Does Bialet have components?<a class="headerlink" href="#does-bialet-have-components" title="Link to this heading">#</a></h3>
+<p>Yes. A component is a class whose method returns an inline HTML block.</p>
+<p>There is no component registry, no props system, no slots, no JSX, no lifecycle
+and no client-side runtime. That is intentional: Wren already has classes and
+methods, and an inline HTML literal already returns markup. Composition is a
+method call inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code>; props are method parameters; the body is the
+<code class="docutils literal notranslate"><span class="pre">content</span></code> parameter <code class="docutils literal notranslate"><span class="pre">Layout.page</span></code> already takes.</p>
+<p>Nothing in the framework extracts repeated markup for you. If two pages repeat
+the same card, status bar or navigation, that is app debt: move the markup into
+a method and call it from both.</p>
 </section>
 <section id="id6">
 <h3>Pitfalls<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
@@ -1213,6 +1565,41 @@ must instantiate the class:</p>
 <code class="docutils literal notranslate"><span class="pre">head</span></code>, <code class="docutils literal notranslate"><span class="pre">footer</span></code>, plus one or two component helpers) covers most needs.
 Nested class hierarchies and deep abstraction layers work against Bialet’s
 simplicity.</p>
+<p>Extract on the second or third repetition, and only when the markup carries a
+decision — a loop, a condition, a class toggled by data. A method per <code class="docutils literal notranslate"><span class="pre">&lt;span&gt;</span></code>
+is worse than the markup it replaces.</p>
+<p><strong>String-concatenated markup.</strong> HTML is a literal, not a string to assemble:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — no tag checks, and the value is now markup</span>
+<span class="k">static</span><span class="w"> </span><span class="n">mission</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="p">(</span><span class="s2">"&lt;li&gt;"</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="s2">"&lt;/li&gt;"</span><span class="p">)</span><span class="o">.</span><span class="n">raw</span><span class="w"> </span><span class="p">}</span>
+
+<span class="c1">// Correct — the literal is checked at compile time, the value is escaped</span>
+<span class="k">static</span><span class="w"> </span><span class="n">mission</span><span class="p">(</span><span class="n">row</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;li&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">row</span><span class="p">[</span><span class="s2">"title"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/li&gt;</span><span class="w"> </span><span class="p">}</span>
+</pre></div>
+</div>
+<p><strong>An HTML argument starts on a new line.</strong> The lexer opens an inline HTML
+string after <code class="docutils literal notranslate"><span class="pre">=</span></code>, <code class="docutils literal notranslate"><span class="pre">return</span></code>, <code class="docutils literal notranslate"><span class="pre">(</span></code>, <code class="docutils literal notranslate"><span class="pre">[</span></code>, <code class="docutils literal notranslate"><span class="pre">{</span></code>, <code class="docutils literal notranslate"><span class="pre">|</span></code>, <code class="docutils literal notranslate"><span class="pre">:</span></code>, <code class="docutils literal notranslate"><span class="pre">&amp;&amp;</span></code>, <code class="docutils literal notranslate"><span class="pre">?</span></code> or a newline —
+not after a comma. A literal written straight after a comma is read as a
+less-than comparison:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Wrong — "&lt;section&gt;" is parsed as a comparison</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Dashboard"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="x">&lt;section class="dashboard"&gt;&lt;/section&gt;</span><span class="p">)</span>
+
+<span class="c1">// Correct — the newline opens the literal</span>
+<span class="k">return</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Dashboard"</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span>
+<span class="w">  </span><span class="x">&lt;section class="dashboard"&gt;&lt;/section&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Components that silently depend on globals.</strong> A component that reads
+<code class="docutils literal notranslate"><span class="pre">Session</span></code> or <code class="docutils literal notranslate"><span class="pre">Request</span></code> looks pure and is not: the same call returns different
+markup depending on who is asking, it cannot run in a cron job or a unit test,
+and the query it hides is invisible to the route that thought it owned the
+data. Pass the values in.</p>
+<p><strong>Escaping mistakes.</strong> Three shapes recur: concatenating a user value into
+markup and marking it <code class="docutils literal notranslate"><span class="pre">.raw</span></code>; adding <code class="docutils literal notranslate"><span class="pre">.safe</span></code> inside <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> (which double
+escapes); and building a URL from an unvalidated parameter. The first is XSS,
+the second mangles text. Interpolate plain values and let <code class="docutils literal notranslate"><span class="pre">{{</span> <span class="pre">}}</span></code> escape them.</p>
+<p><strong>Giant methods.</strong> A method that renders a whole page with five nested loops is
+a template class in disguise. Split it by region, one method per block, and let
+each method fit on a screen.</p>
 </section>
 </section>
 <hr class="docutils" />
@@ -1564,6 +1951,15 @@ still runs and attaches a body to the 302 — no error, just a redirect with
 an unexpected body. Always <code class="docutils literal notranslate"><span class="pre">return</span> <span class="pre">Response.redirect(...)</span></code>.</p></li>
 <li><p><strong>Instance vs static methods:</strong> Instance methods need <code class="docutils literal notranslate"><span class="pre">new()</span></code>; static methods
 don’t.</p></li>
+<li><p><strong>Repeated markup:</strong> Components are classes with methods that return HTML.
+A card, status bar or navigation block repeated in two pages belongs in one
+method, not in both files.</p></li>
+<li><p><strong>Components reading the request:</strong> Pass data as parameters. A component that
+reads <code class="docutils literal notranslate"><span class="pre">Request</span></code> or <code class="docutils literal notranslate"><span class="pre">Session</span></code> cannot be reused or unit-tested.</p></li>
+<li><p><strong>HTML as a call argument:</strong> Start the literal on a new line. After a comma
+the lexer reads <code class="docutils literal notranslate"><span class="pre">&lt;</span></code> as less-than, so <code class="docutils literal notranslate"><span class="pre">Layout.page(&quot;X&quot;,</span> <span class="pre">null,</span> <span class="pre">&lt;main&gt;...)</span></code> does
+not compile; <code class="docutils literal notranslate"><span class="pre">Layout.page(&quot;X&quot;,</span> <span class="pre">null,</span></code> followed by the literal on the next line
+does.</p></li>
 <li><p><strong><code class="docutils literal notranslate"><span class="pre">_</span></code>-prefixed CSS is not served:</strong> Name stylesheets without leading <code class="docutils literal notranslate"><span class="pre">_</span></code>.</p></li>
 <li><p><strong>CSS preprocessors not built in:</strong> Write vanilla CSS or use a build step.</p></li>
 <li><p><strong>Framework CDNs in production:</strong> Self-host CSS files for reliability.</p></li>
@@ -1663,6 +2059,17 @@ intentionally-raw markup.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#template-classes-components">Template Classes / Components</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#layout-template">Layout template</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#using-the-template">Using the template</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#a-component-set">A component set</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-route-that-renders-them">The route that renders them</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#the-same-markup-in-a-second-page">The same markup in a second page</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#pass-data-in-do-not-fetch-it-inside">Pass data in, do not fetch it inside</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#keep-components-pure">Keep components pure</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#static-or-instance-methods">Static or instance methods</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#looping-over-rows">Looping over rows</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#escaping">Escaping</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-component-files-live">Where component files live</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#structuring-a-larger-app">Structuring a larger app</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#does-bialet-have-components">Does Bialet have components?</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">Pitfalls</a></li>
 </ul>
 </li>

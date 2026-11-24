@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'http-calls';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Building REST APIs" href="rest-api.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -466,6 +466,7 @@
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-cloudflare-api-client">Example: Cloudflare API Client</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stubbing-calls-in-tests">Stubbing Calls in Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-features">Missing Features</a></li>
 </ul>
             </nav>
@@ -889,6 +890,27 @@ list; both are per-request state, not saved configuration.</p></li>
 an unbounded body. Only call APIs you trust.</p></li>
 </ul>
 </section>
+<section id="stubbing-calls-in-tests">
+<h2>Stubbing Calls in Tests<a class="headerlink" href="#stubbing-calls-in-tests" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code> runs in-process, so a call to a real API would leave the machine and
+make the suite depend on a third party. Pin the response with <code class="docutils literal notranslate"><span class="pre">Test.stubHttp</span></code>:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/checkout.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">stubHttp</span><span class="p">(</span><span class="s2">"https://api.example.com/charge"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">"status"</span><span class="o">:</span><span class="w"> </span><span class="mf">200</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"headers"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"Content-Type"</span><span class="o">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="p">},</span>
+<span class="w">  </span><span class="s2">"body"</span><span class="o">:</span><span class="w"> </span><span class="s2">"{</span><span class="se">\"</span><span class="s2">ok</span><span class="se">\"</span><span class="s2">:true}"</span>
+<span class="p">})</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/checkout"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"amount"</span><span class="o">:</span><span class="w"> </span><span class="s2">"1999"</span><span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="nc">Test</span><span class="o">.</span><span class="n">httpCalls</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"the handler called the API once"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The pattern is the full URL with <code class="docutils literal notranslate"><span class="pre">*</span></code> wildcards. The first match wins, and a URL
+that matches no stub still goes to the real network with the real timeout.
+<code class="docutils literal notranslate"><span class="pre">Test.httpCalls</span></code> lists the matched calls; <code class="docutils literal notranslate"><span class="pre">Test.clearHttpStubs()</span></code> removes the
+stubs. See <a class="reference internal" href="tests.html#id1"><span class="std std-ref">Testing § Stubbing Outbound HTTP Calls</span></a>
+for the response keys and the full API.</p>
+</section>
 <section id="missing-features">
 <h2>Missing Features<a class="headerlink" href="#missing-features" title="Link to this heading">#</a></h2>
 <p>Not every HTTP client feature is implemented yet. Multipart/file uploads are
@@ -970,6 +992,7 @@ planned — see the
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#example-cloudflare-api-client">Example: Cloudflare API Client</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#error-handling">Error Handling</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pitfalls">Pitfalls</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stubbing-calls-in-tests">Stubbing Calls in Tests</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#missing-features">Missing Features</a></li>
 </ul>
   </nav></div>

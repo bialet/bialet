@@ -11,10 +11,10 @@
 <meta property="og:type" content="website" />
 <meta property="og:url" content="https://bialet.dev/tests.html" />
 <meta property="og:site_name" content="Bialet" />
-<meta property="og:description" content="Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints. Running Tests: Use the-T flag to run all ..." />
+<meta property="og:description" content="Bialet includes a built-in test runner. A test is a Wren file that makes a request and asserts the response. The request goes through your real router, so the test exercises the same code a browser..." />
 <meta property="og:image" content="https://bialet.dev/_static/og-image.png" />
 <meta property="og:image:alt" content="Bialet" />
-<meta name="description" content="Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints. Running Tests: Use the-T flag to run all ..." />
+<meta name="description" content="Bialet includes a built-in test runner. A test is a Wren file that makes a request and asserts the response. The request goes through your real router, so the test exercises the same code a browser..." />
 
     <title>Testing in Bialet &#8212; Bialet</title>
   
@@ -58,7 +58,7 @@
     <script src="_static/scripts/sphinx-book-theme.js?v=efea14e4"></script>
     <script src="_static/design-tabs.js?v=36754332"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'tests';</script>
-    <script defer="defer" src="_static/ai-prompt.js?v=a1ab9df4"></script>
+    <script defer="defer" src="_static/ai-prompt.js?v=59bb2ebb"></script>
     <script defer="defer" src="_static/copy.js?v=98cf20f6"></script>
     <link rel="icon" href="_static/favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
@@ -67,7 +67,7 @@
     <link rel="prev" title="Cron Tasks" href="cron.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
-  <meta name="docsearch:version" content="1.2.28" />
+  <meta name="docsearch:version" content="1.2.29" />
   </head>
   
   
@@ -440,6 +440,11 @@
             <nav aria-label="Page">
                 <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-your-first-test">Writing Your First Test</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-the-test-goes">Where the test goes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#arrange-act-assert">Arrange, act, assert</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-directory-structure">Test Directory Structure</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-initialization">Test Initialization</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
@@ -460,26 +465,41 @@
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-tests-in-one-file">Multiple Tests in One File</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-test-patterns">Multiple Test Patterns</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-test-examples">Complete Test Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-components-and-domain-classes">Testing Components and Domain Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#components">Components</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-classes-that-read-session">Domain classes that read <code class="docutils literal notranslate"><span class="pre">Session</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-fixture-class">The <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stubbing-outbound-http-calls">Stubbing Outbound HTTP Calls</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#patterns-and-call-records">Patterns and call records</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deterministic-time-and-randomness">Deterministic Time and Randomness</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#freezing-time">Freezing time</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seeding-randomness">Seeding randomness</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-assertion-methods">Use Appropriate Assertion Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-testing">Security Testing</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-custom-assertions-for-complex-logic">Use Custom Assertions for Complex Logic</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chain-related-assertions">Chain Related Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-both-success-and-failure-cases">Test Both Success and Failure Cases</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-the-flow-not-the-page">Test the flow, not the page</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cover-a-boundary-not-the-middle">Cover a boundary, not the middle</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-assertion-styles">Mixed Assertion Styles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
 </ul>
             </nav>
         </div>
@@ -493,7 +513,9 @@
                   
   <section id="testing-in-bialet">
 <h1>Testing in Bialet<a class="headerlink" href="#testing-in-bialet" title="Link to this heading">#</a></h1>
-<p>Bialet includes a built-in testing framework for HTTP endpoint testing. Tests are written in Wren and can verify responses from your application endpoints.</p>
+<p>Bialet includes a built-in test runner. A test is a Wren file that makes a
+request and asserts the response. The request goes through your real router, so
+the test exercises the same code a browser would hit.</p>
 <section id="running-tests">
 <h2>Running Tests<a class="headerlink" href="#running-tests" title="Link to this heading">#</a></h2>
 <p>Use the <code class="docutils literal notranslate"><span class="pre">-T</span></code> flag to run all tests:</p>
@@ -503,27 +525,109 @@ bialet<span class="w"> </span>-T<span class="w"> </span>-q<span class="w">      
 </pre></div>
 </div>
 </section>
+<section id="writing-your-first-test">
+<h2>Writing Your First Test<a class="headerlink" href="#writing-your-first-test" title="Link to this heading">#</a></h2>
+<p>A test file is a plain Wren script. Statements run top to bottom; there are no
+test functions and no registration step. Each <code class="docutils literal notranslate"><span class="pre">Test.get</span></code> / <code class="docutils literal notranslate"><span class="pre">Test.post</span></code> call
+builds a request, runs it in a fresh VM through the real router, and returns an
+object you assert on.</p>
+<p><strong>Application file:</strong> <code class="docutils literal notranslate"><span class="pre">hi.wren</span></code></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;h1&gt;👋 Hello World&lt;/h1&gt;</span>
+</pre></div>
+</div>
+<p><strong>Test file:</strong> <code class="docutils literal notranslate"><span class="pre">_tests/hi.wren</span></code></p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><strong>Run it:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
+Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
+
+<span class="w">  </span>✓<span class="w"> </span>hi.wren<span class="w"> </span><span class="o">(</span>5ms<span class="o">)</span>
+
+Summary:
+
+Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Elapsed<span class="w"> </span>Time:<span class="w"> </span>5ms
+</pre></div>
+</div>
+<p>A failed assertion aborts the file and reports the assertion message:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
+Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
+
+<span class="w">  </span>✗<span class="w"> </span>hi.wren
+<span class="w">      </span>Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>
+
+Summary:
+
+Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
+Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
+Elapsed<span class="w"> </span>Time:<span class="w"> </span>20ms
+</pre></div>
+</div>
+<p>The first failed assertion ends the file, so assertions after it do not run.
+Keep tests in a file independent of each other, or split them.</p>
+<section id="where-the-test-goes">
+<h3>Where the test goes<a class="headerlink" href="#where-the-test-goes" title="Link to this heading">#</a></h3>
+<p>Mirror your route files. A route in <code class="docutils literal notranslate"><span class="pre">hi.wren</span></code> gets <code class="docutils literal notranslate"><span class="pre">_tests/hi.wren</span></code>; a todo app
+in <code class="docutils literal notranslate"><span class="pre">tasks.wren</span></code> gets <code class="docutils literal notranslate"><span class="pre">_tests/tasks.wren</span></code>. The directory name is all the runner
+needs — any <code class="docutils literal notranslate"><span class="pre">_tests/*.wren</span></code> file runs, in any order.</p>
+</section>
+<section id="arrange-act-assert">
+<h3>Arrange, act, assert<a class="headerlink" href="#arrange-act-assert" title="Link to this heading">#</a></h3>
+<p>Most tests have three beats: set up, perform the action, check the result.
+Assert the flow the user asked for, not just that a page renders:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/tasks.wren</span>
+
+<span class="c1">// Arrange: the table starts empty in this file's database state.</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Buy bread"</span><span class="p">)</span>
+
+<span class="c1">// Act: the form POST writes the row.</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Buy bread"</span><span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+
+<span class="c1">// Assert: the next GET reads the same value back.</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Buy bread"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A page that answers 200 with an empty list proves nothing. The POST that
+redirects and the GET that shows the new row together prove the feature works.</p>
+</section>
+</section>
 <section id="test-directory-structure">
 <h2>Test Directory Structure<a class="headerlink" href="#test-directory-structure" title="Link to this heading">#</a></h2>
-<p>Tests are located in the <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder within your application:</p>
+<p>Tests live in <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> inside your application:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="n">myapp</span><span class="o">/</span>
 <span class="err">├──</span><span class="w"> </span><span class="vi">_app</span><span class="o">.</span><span class="n">wren</span>
 <span class="err">├──</span><span class="w"> </span><span class="vi">_migration</span><span class="o">.</span><span class="n">wren</span>
 <span class="err">├──</span><span class="w"> </span><span class="n">hi</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">├──</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">├──</span><span class="w"> </span><span class="vi">_app</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">components</span><span class="o">/</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">layout</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">│</span><span class="w">   </span><span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">cards</span><span class="o">.</span><span class="n">wren</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">domain</span><span class="o">.</span><span class="n">wren</span>
 <span class="err">├──</span><span class="w"> </span><span class="vi">_tests</span><span class="o">/</span>
-<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="vi">_init</span><span class="o">.</span><span class="n">wren</span><span class="w">           </span><span class="cs"># Optional: runs before test files</span>
+<span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="vi">_init</span><span class="o">.</span><span class="n">wren</span><span class="w">           </span><span class="cs"># Optional: runs before each test file</span>
 <span class="err">│</span><span class="w">   </span><span class="err">├──</span><span class="w"> </span><span class="n">hi</span><span class="o">.</span><span class="n">wren</span><span class="w">              </span><span class="cs"># Tests for hi.wren</span>
-<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">password</span><span class="o">.</span><span class="n">wren</span><span class="w">        </span><span class="cs"># Tests for password.wren</span>
+<span class="err">│</span><span class="w">   </span><span class="err">└──</span><span class="w"> </span><span class="n">tasks</span><span class="o">.</span><span class="n">wren</span><span class="w">           </span><span class="cs"># Tests for tasks.wren</span>
 </pre></div>
 </div>
-<p><strong>Important:</strong> The <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder name starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> to prevent direct HTTP access, following Bialet’s convention for private files.</p>
+<p><strong>Important:</strong> the <code class="docutils literal notranslate"><span class="pre">_tests/</span></code> folder name starts with <code class="docutils literal notranslate"><span class="pre">_</span></code> to prevent direct HTTP
+access, following Bialet’s convention for private files.</p>
 </section>
 <section id="test-initialization">
 <h2>Test Initialization<a class="headerlink" href="#test-initialization" title="Link to this heading">#</a></h2>
 <section id="tests-init-wren-optional">
 <h3><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)<a class="headerlink" href="#tests-init-wren-optional" title="Link to this heading">#</a></h3>
-<p>If present, this file runs once at the start of each test run (before any
-test files execute). Use it for common setup:</p>
+<p>If present, this file runs before every test file, inside that file’s
+savepoint. Use it for shared setup:</p>
 <div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/_init.wren</span>
 <span class="nc">System</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="s2">"Setting up test environment"</span><span class="p">)</span>
 
@@ -531,6 +635,13 @@ test files execute). Use it for common setup:</p>
 <span class="sb">`INSERT INTO users (name, email) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">"Test User"</span><span class="p">,</span><span class="w"> </span><span class="s2">"test@example.com"</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Two consequences:</p>
+<ul class="simple">
+<li><p>Top-level <code class="docutils literal notranslate"><span class="pre">var</span></code>s declared here are visible to every test file, because the
+file runs in the same module as the test.</p></li>
+<li><p>Rows written here are visible to the test file that follows and gone once that
+file finishes. Each file gets a fresh copy of the same seeded state.</p></li>
+</ul>
 </section>
 </section>
 <section id="skipping-tests">
@@ -557,6 +668,9 @@ still executes – put it first if the rest of the file should not run.</p>
 <span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Requests are lazy: nothing runs until the first assertion (or <code class="docutils literal notranslate"><span class="pre">.json()</span></code>,
+<code class="docutils literal notranslate"><span class="pre">.csrf()</span></code> or <code class="docutils literal notranslate"><span class="pre">.text()</span></code>) asks for the response. Chain as many assertions as you
+need on one request.</p>
 </section>
 <section id="test-api-reference">
 <h2>Test API Reference<a class="headerlink" href="#test-api-reference" title="Link to this heading">#</a></h2>
@@ -715,6 +829,11 @@ none.</p>
 <p><code class="docutils literal notranslate"><span class="pre">.contains()</span></code> matches raw markup; attributes and script bodies can satisfy it. Use
 <code class="docutils literal notranslate"><span class="pre">.textContains()</span></code> for visible text: it strips tags and collapses whitespace, so a
 multi-word assertion does not depend on how the template wraps the line.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: there is no <code class="docutils literal notranslate"><span class="pre">Test.headers</span></code> map. Use the <code class="docutils literal notranslate"><span class="pre">.header(name)</span></code> assertion
+to check a header exists, <code class="docutils literal notranslate"><span class="pre">.header(name,</span> <span class="pre">value)</span></code> to check its value, and
+<code class="docutils literal notranslate"><span class="pre">.text()</span></code> / <code class="docutils literal notranslate"><span class="pre">.json()</span></code> for the body.</p>
+</div></blockquote>
 </section>
 <section id="body-assertions">
 <h3>Body Assertions<a class="headerlink" href="#body-assertions" title="Link to this heading">#</a></h3>
@@ -742,7 +861,7 @@ multi-word assertion does not depend on how the template wraps the line.</p>
 <span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/users"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected at least one user"</span><span class="p">)</span>
 
-<span class="c1">// Fluent JSON assertions (from _tests/api-user.wren)</span>
+<span class="c1">// Fluent JSON assertions</span>
 <span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/api-user"</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
@@ -759,16 +878,14 @@ multi-word assertion does not depend on how the template wraps the line.</p>
 <section id="two-approaches-to-json-testing">
 <h3>Two Approaches to JSON Testing<a class="headerlink" href="#two-approaches-to-json-testing" title="Link to this heading">#</a></h3>
 <p><strong>Approach 1: Fluent JSON methods</strong> (best for simple checks)</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/api-user.wren</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/api-user"</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/api-user"</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">jsonContains</span><span class="p">(</span><span class="s2">"id"</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">jsonEquals</span><span class="p">(</span><span class="s2">"name"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Test User"</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">jsonNotContains</span><span class="p">(</span><span class="s2">"password"</span><span class="p">)</span>
 </pre></div>
 </div>
 <p><strong>Approach 2: Parse JSON + custom logic</strong> (best for complex validation)</p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/json.wren</span>
-<span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 <span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected at least 2 counters"</span><span class="p">)</span>
 
 <span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">counters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
@@ -810,96 +927,439 @@ multi-word assertion does not depend on how the template wraps the line.</p>
 </div>
 </section>
 </section>
-<section id="api-testing-examples">
-<h2>API Testing Examples<a class="headerlink" href="#api-testing-examples" title="Link to this heading">#</a></h2>
-<section id="json-response-testing">
-<h3>JSON Response Testing<a class="headerlink" href="#json-response-testing" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Test JSON endpoint with json() and assert() (from _tests/json.wren)</span>
-<span class="c1">// Shows parsing JSON and custom validation logic</span>
-
-<span class="c1">// Parse JSON response</span>
-<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="nc">List</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected JSON array"</span><span class="p">)</span>
-
-<span class="c1">// Insert test data</span>
-<span class="sb">`INSERT OR REPLACE INTO counter (name, value) VALUES ('test1', 10)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
-
-<span class="c1">// Complex validation with parsed JSON</span>
-<span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected at least 2 counters"</span><span class="p">)</span>
-
-<span class="c1">// Iterate and validate specific values</span>
-<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">counters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"test1"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<span class="w">    </span><span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"10"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected value '10'"</span><span class="p">)</span>
-<span class="w">  </span><span class="p">}</span>
+<section id="testing-components-and-domain-classes">
+<h2>Testing Components and Domain Classes<a class="headerlink" href="#testing-components-and-domain-classes" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Test.get</span></code> exercises the app from the outside: real request in, response out.
+That is the default, and it is what most tests need.</p>
+<p>Some behaviour is easier to pin down without an HTTP round trip: a component
+that must escape a value, a domain query that must scope rows to the current
+session, a formatter with edge cases. A test file is its own Wren module, so it
+can import the app code directly and call it:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/cards.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cards</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">tool</span><span class="p">(</span><span class="n">item</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;article class="card tool"&gt;</span>
+<span class="x">    &lt;h3&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/h3&gt;</span>
+<span class="x">    &lt;p class="meta"&gt;</span><span class="nc">Wear</span><span class="w"> </span><span class="si">{{</span><span class="w"> </span><span class="n">item</span><span class="p">[</span><span class="s2">"wear"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="w"> </span><span class="n">of</span><span class="w"> </span><span class="mf">100</span><span class="x">&lt;/p&gt;</span>
+<span class="x">  &lt;/article&gt;</span><span class="w"> </span><span class="p">}</span>
 <span class="p">}</span>
 </pre></div>
 </div>
-</section>
-<section id="multiple-test-patterns">
-<h3>Multiple Test Patterns<a class="headerlink" href="#multiple-test-patterns" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/hi.wren - different assertion styles</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/components.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"../_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span>
 
-<span class="c1">// Simple contains check</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">markup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">({</span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Hammer"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wear"</span><span class="o">:</span><span class="w"> </span><span class="s2">"40"</span><span class="p">})</span><span class="o">.</span><span class="n">toString</span>
 
-<span class="c1">// Exact match</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">"&lt;h1&gt;👋 Hello World&lt;/h1&gt;"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">markup</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hammer"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the card renders its name"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">markup</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Wear 40 of 100"</span><span class="p">),</span><span class="w"> </span><span class="s2">"it renders the wear"</span><span class="p">)</span>
 
-<span class="c1">// Multiple chained assertions</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"World"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Goodbye"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">escaped</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Cards</span><span class="o">.</span><span class="n">tool</span><span class="p">({</span><span class="s2">"name"</span><span class="o">:</span><span class="w"> </span><span class="s2">"&lt;b&gt;"</span><span class="p">,</span><span class="w"> </span><span class="s2">"wear"</span><span class="o">:</span><span class="w"> </span><span class="s2">"1"</span><span class="p">})</span><span class="o">.</span><span class="n">toString</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">escaped</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"&amp;lt;b&amp;gt;"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the name is escaped"</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
-<section id="security-and-negative-assertions">
-<h3>Security and Negative Assertions<a class="headerlink" href="#security-and-negative-assertions" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/password.wren - test what should NOT be present</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"abc"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"xyz"</span><span class="p">})</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span><span class="w">  </span><span class="c1">// Should not contain success message</span>
-
-<span class="c1">// From _tests/assertions.wren</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Error"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Failed"</span><span class="p">)</span>
+<p>A component returns <code class="docutils literal notranslate"><span class="pre">HtmlNode</span></code>, not a String: call <code class="docutils literal notranslate"><span class="pre">.toString</span></code> before you use
+<code class="docutils literal notranslate"><span class="pre">String</span></code> methods on it. <code class="docutils literal notranslate"><span class="pre">HtmlNode.contains</span></code> compares characters and never
+matches a substring.</p>
+<p>Both import forms work:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">import</span><span class="w"> </span><span class="s2">"../_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span><span class="w">   </span><span class="c1">// relative to _tests/</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"/_app/components/cards"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Cards</span><span class="w">     </span><span class="c1">// root-absolute</span>
 </pre></div>
 </div>
-</section>
-<section id="form-testing">
-<h3>Form Testing<a class="headerlink" href="#form-testing" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/password.wren</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">})</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span>
-
-<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"321"</span><span class="p">})</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are different"</span><span class="p">)</span>
+<p>Use whichever form your route files use. Root-absolute imports resolve from the
+app root and survive moving the test; <code class="docutils literal notranslate"><span class="pre">../_app/...</span></code> is shorter and reads well
+next to the module it exercises.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Test style</p></th>
+<th class="head"><p>Reach for it when</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Black-box (<code class="docutils literal notranslate"><span class="pre">Test.get</span></code>)</p></td>
+<td><p>You care that the flow works end to end: form posts, redirects, session, rendered output</p></td>
+</tr>
+<tr class="row-odd"><td><p>White-box (import + <code class="docutils literal notranslate"><span class="pre">Fixture</span></code>)</p></td>
+<td><p>You care about one function or one component’s output, and building a route to reach it would be noise</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>White-box tests skip the router. They do not prove the route is wired up, so
+keep a black-box test for every feature that matters and use the import when the
+unit is hard to reach from outside.</p>
+<section id="components">
+<h3>Components<a class="headerlink" href="#components" title="Link to this heading">#</a></h3>
+<p>Components are plain classes with methods that return HTML — see
+<a class="reference internal" href="template.html"><span class="std std-doc">Template Classes / Components</span></a>. Call them like any other method:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/components/layout.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Layout</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">page</span><span class="p">(</span><span class="n">title</span><span class="p">,</span><span class="w"> </span><span class="n">user</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="x">&lt;!doctype html&gt;</span>
+<span class="w">    </span><span class="x">&lt;html lang="en"&gt;</span>
+<span class="x">      &lt;head&gt;&lt;title&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">title</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/title&gt;&lt;/head&gt;</span>
+<span class="x">      &lt;body&gt;</span>
+<span class="w">        </span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="x">&lt;span class="who"&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">user</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/span&gt;</span><span class="w"> </span><span class="si">}}</span>
+<span class="w">        </span><span class="x">&lt;main&gt;</span><span class="si">{{</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="si">}}</span><span class="x">&lt;/main&gt;</span>
+<span class="w">      </span><span class="x">&lt;/body&gt;</span>
+<span class="x">    &lt;/html&gt;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
 </pre></div>
 </div>
-</section>
-<section id="complete-test-examples">
-<h3>Complete Test Examples<a class="headerlink" href="#complete-test-examples" title="Link to this heading">#</a></h3>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// From _tests/assertions.wren - comprehensive testing</span>
-<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">"&lt;h1&gt;👋 Hello World&lt;/h1&gt;"</span><span class="p">)</span>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/layout.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"../_app/components/layout"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Layout</span>
 
-<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"test123"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"test123"</span><span class="p">})</span>
-<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hash:"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">content</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="x">&lt;h1&gt;Tasks&lt;/h1&gt;</span>
+<span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Layout</span><span class="o">.</span><span class="n">page</span><span class="p">(</span><span class="s2">"Tasks"</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="n">content</span><span class="p">)</span><span class="o">.</span><span class="n">toString</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"&lt;title&gt;Tasks&lt;/title&gt;"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the title reaches the head"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"&lt;h1&gt;Tasks&lt;/h1&gt;"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the content lands in main"</span><span class="p">)</span>
 </pre></div>
 </div>
+<p><code class="docutils literal notranslate"><span class="pre">Layout.page</span></code> takes <code class="docutils literal notranslate"><span class="pre">title</span></code>, <code class="docutils literal notranslate"><span class="pre">user</span></code>, <code class="docutils literal notranslate"><span class="pre">content</span></code>, in that order. Pass <code class="docutils literal notranslate"><span class="pre">null</span></code> for
+<code class="docutils literal notranslate"><span class="pre">user</span></code> when there is none, and build <code class="docutils literal notranslate"><span class="pre">content</span></code> in a variable first: an inline
+HTML literal cannot start right after a comma, so
+<code class="docutils literal notranslate"><span class="pre">Layout.page(&quot;Tasks&quot;,</span> <span class="pre">null,</span> <span class="pre">&lt;h1&gt;Tasks&lt;/h1&gt;)</span></code> does not parse.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Class</p></th>
+<th class="head"><p>Methods</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Cards</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Cards.tool(item)</span></code>, <code class="docutils literal notranslate"><span class="pre">Cards.mission(row)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Hud</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Hud.state(game)</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Nav</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Nav.bar(user)</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Layout</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Layout.page(title,</span> <span class="pre">user,</span> <span class="pre">content)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>One class per file under <code class="docutils literal notranslate"><span class="pre">_app/components/</span></code>. See
+<a class="reference internal" href="template.html"><span class="std std-doc">Template Classes / Components</span></a> for the full set.</p>
 </section>
+<section id="domain-classes-that-read-session">
+<h3>Domain classes that read <code class="docutils literal notranslate"><span class="pre">Session</span></code><a class="headerlink" href="#domain-classes-that-read-session" title="Link to this heading">#</a></h3>
+<p>A domain method that filters on <code class="docutils literal notranslate"><span class="pre">Session.id</span></code> needs a request behind it before
+it can run. <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> builds one without going through the router. Apply the
+fixture, then call the imported code:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _app/domain.wren</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Task</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">static</span><span class="w"> </span><span class="n">mine</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="sb">`</span>
+<span class="sb">    SELECT * FROM tasks WHERE session = ? ORDER BY createdAt ASC</span>
+<span class="sb">  `</span><span class="o">.</span><span class="n">fetch</span><span class="p">(</span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="nc">Task</span><span class="p">)</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/domain.wren</span>
+<span class="k">import</span><span class="w"> </span><span class="s2">"../_app/domain"</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="nc">Task</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">fixture</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Fixture</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+
+<span class="c1">// The fixture's request is now the current request: Session.id resolves.</span>
+<span class="sb">`INSERT INTO tasks (title, session) VALUES (?, ?)`</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">"Buy bread"</span><span class="p">,</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+
+<span class="k">var</span><span class="w"> </span><span class="n">tasks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Task</span><span class="o">.</span><span class="n">mine</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">tasks</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"the domain query scopes rows to the session"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">tasks</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span><span class="o">.</span><span class="n">title</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"Buy bread"</span><span class="p">,</span><span class="w"> </span><span class="s2">"it returns the seeded row"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Calling code that reads <code class="docutils literal notranslate"><span class="pre">Request</span></code>, <code class="docutils literal notranslate"><span class="pre">Cookie</span></code> or <code class="docutils literal notranslate"><span class="pre">Session</span></code> directly from a test
+fails at the first access unless a request is installed. <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> is what
+installs one without the router.</p>
+</section>
+</section>
+<section id="the-fixture-class">
+<h2>The <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> Class<a class="headerlink" href="#the-fixture-class" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Fixture</span></code> fakes a request in place of the router. It builds the request from a
+fluent chain, installs it with <code class="docutils literal notranslate"><span class="pre">apply()</span></code>, and afterwards exposes what the code
+under test set on the response.</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">fixture</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Fixture</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Buy bread"</span><span class="p">})</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+
+<span class="c1">// The controller code under test, lifted out of its route:</span>
+<span class="sb">`INSERT INTO tasks (title, session) VALUES (?, ?)`</span>
+<span class="w">    </span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"title"</span><span class="p">),</span><span class="w"> </span><span class="nc">Session</span><span class="o">.</span><span class="n">id</span><span class="p">)</span>
+<span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">fixture</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">302</span><span class="p">,</span><span class="w"> </span><span class="s2">"the POST redirects"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">fixture</span><span class="o">.</span><span class="n">header</span><span class="p">(</span><span class="s2">"location"</span><span class="p">)</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="s2">"it redirects to the list"</span><span class="p">)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">apply()</span></code> calls <code class="docutils literal notranslate"><span class="pre">Response.init</span></code> and <code class="docutils literal notranslate"><span class="pre">Request.init</span></code> and returns the fixture, so
+the chain and the assertions can share one expression:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">var</span><span class="w"> </span><span class="n">page</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Fixture</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="s2">"page"</span><span class="p">,</span><span class="w"> </span><span class="s2">"2"</span><span class="p">)</span><span class="o">.</span><span class="n">apply</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">page</span><span class="o">.</span><span class="n">status</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">200</span><span class="p">,</span><span class="w"> </span><span class="s2">"the page renders"</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Member</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.get(path)</span></code></p></td>
+<td><p>Build a GET fixture</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.post(path,</span> <span class="pre">form)</span></code></p></td>
+<td><p>Build a POST fixture with a form Map</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.put(path,</span> <span class="pre">form)</span></code></p></td>
+<td><p>Build a PUT fixture with a form Map</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.patch(path,</span> <span class="pre">form)</span></code></p></td>
+<td><p>Build a PATCH fixture with a form Map</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.delete(path)</span></code></p></td>
+<td><p>Build a DELETE fixture</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">Fixture.request(method,</span> <span class="pre">path)</span></code></p></td>
+<td><p>Build a fixture for any method</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.route(prefix)</span></code></p></td>
+<td><p>Matched route prefix, so <code class="docutils literal notranslate"><span class="pre">Request.route(0)</span></code> reads the segment after it (<code class="docutils literal notranslate"><span class="pre">.route(&quot;/notes&quot;)</span></code> for <code class="docutils literal notranslate"><span class="pre">/notes/42</span></code>)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.query(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Add a query-string parameter</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.post(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Add a form field</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.body(rawString)</span></code></p></td>
+<td><p>Set a raw request body</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.header(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Add a request header</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.cookie(name,</span> <span class="pre">value)</span></code></p></td>
+<td><p>Add a request cookie</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.fields(encoded)</span></code></p></td>
+<td><p>Multipart form fields, already encoded</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.files(encoded)</span></code></p></td>
+<td><p>Multipart file parts, already encoded</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.apply()</span></code></p></td>
+<td><p>Install the request (<code class="docutils literal notranslate"><span class="pre">Response.init</span></code> + <code class="docutils literal notranslate"><span class="pre">Request.init</span></code>); returns the fixture</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.status</span></code></p></td>
+<td><p>Response status set by the code under test</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.body</span></code></p></td>
+<td><p>Response body</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.headers</span></code></p></td>
+<td><p>Response headers, a Map with lowercased names</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.header(name)</span></code></p></td>
+<td><p>One response header value</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">.body</span></code> has two roles. With an argument it sets a raw request body; with none it
+reads the response body back after <code class="docutils literal notranslate"><span class="pre">apply()</span></code>. <code class="docutils literal notranslate"><span class="pre">.body(rawString)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">.post(name,</span> <span class="pre">value)</span></code> cover the two common bodies — reach for <code class="docutils literal notranslate"><span class="pre">.fields</span></code> /
+<code class="docutils literal notranslate"><span class="pre">.files</span></code> only when a test needs a real multipart payload.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> does not run the router and does not follow redirects.
+A handler that calls <code class="docutils literal notranslate"><span class="pre">Response.redirect</span></code> leaves <code class="docutils literal notranslate"><span class="pre">fixture.status</span> <span class="pre">==</span> <span class="pre">302</span></code> and a
+<code class="docutils literal notranslate"><span class="pre">location</span></code> header for you to assert; it does not load the target page. Build a
+second fixture for the redirect target, or use <code class="docutils literal notranslate"><span class="pre">Test.get</span></code> / <code class="docutils literal notranslate"><span class="pre">Test.post</span></code>.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: there are no assertion methods on <code class="docutils literal notranslate"><span class="pre">Fixture</span></code>. Compare <code class="docutils literal notranslate"><span class="pre">status</span></code>,
+<code class="docutils literal notranslate"><span class="pre">body</span></code> and <code class="docutils literal notranslate"><span class="pre">header(...)</span></code> yourself with <code class="docutils literal notranslate"><span class="pre">Test.assert(condition,</span> <span class="pre">message)</span></code>.</p>
+</div></blockquote>
+</section>
+<section id="stubbing-outbound-http-calls">
+<span id="id1"></span><h2>Stubbing Outbound HTTP Calls<a class="headerlink" href="#stubbing-outbound-http-calls" title="Link to this heading">#</a></h2>
+<p>A route that calls a third-party API must not hit it during a test. <code class="docutils literal notranslate"><span class="pre">Test.stubHttp</span></code>
+replaces the response for matching URLs. Stubs are process-wide, so they apply to
+<code class="docutils literal notranslate"><span class="pre">Http.get</span></code> inside a route handler just as they do to a call from the test file:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// checkout.wren</span>
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nc">Request</span><span class="o">.</span><span class="n">isPost</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">var</span><span class="w"> </span><span class="n">charge</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Http</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"https://api.example.com/charge"</span><span class="p">,</span>
+<span class="w">                         </span><span class="p">{</span><span class="s2">"amount"</span><span class="o">:</span><span class="w"> </span><span class="nc">Request</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"amount"</span><span class="p">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="s2">"0"</span><span class="p">})</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="n">charge</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Response</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">502</span><span class="p">)</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="s2">"payment failed"</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nc">Response</span><span class="o">.</span><span class="n">redirect</span><span class="p">(</span><span class="s2">"/thanks"</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="k">return</span><span class="w"> </span><span class="x">&lt;form method="post"&gt;...&lt;/form&gt;</span>
+</pre></div>
+</div>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// _tests/checkout.wren</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">stubHttp</span><span class="p">(</span><span class="s2">"https://api.example.com/charge"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="s2">"status"</span><span class="o">:</span><span class="w"> </span><span class="mf">200</span><span class="p">,</span>
+<span class="w">  </span><span class="s2">"headers"</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="s2">"Content-Type"</span><span class="o">:</span><span class="w"> </span><span class="s2">"application/json"</span><span class="p">},</span>
+<span class="w">  </span><span class="s2">"body"</span><span class="o">:</span><span class="w"> </span><span class="s2">"{</span><span class="se">\"</span><span class="s2">ok</span><span class="se">\"</span><span class="s2">:true,</span><span class="se">\"</span><span class="s2">id</span><span class="se">\"</span><span class="s2">:</span><span class="se">\"</span><span class="s2">ch_1</span><span class="se">\"</span><span class="s2">}"</span>
+<span class="p">})</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/checkout"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"amount"</span><span class="o">:</span><span class="w"> </span><span class="s2">"1999"</span><span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="nc">Test</span><span class="o">.</span><span class="n">httpCalls</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="s2">"the handler called the API once"</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">call</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">httpCalls</span><span class="p">[</span><span class="mf">0</span><span class="p">]</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">call</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"POST"</span><span class="p">,</span><span class="w"> </span><span class="s2">"it went out as a POST"</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">call</span><span class="p">[</span><span class="s2">"body"</span><span class="p">]</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"1999"</span><span class="p">),</span><span class="w"> </span><span class="s2">"the amount was sent"</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">clearHttpStubs</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The response Map accepts:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">status</span></code></p></td>
+<td><p>Num</p></td>
+<td><p>Response status, default <code class="docutils literal notranslate"><span class="pre">200</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">headers</span></code></p></td>
+<td><p>Map</p></td>
+<td><p>Response headers</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">body</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Response body</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">error</span></code></p></td>
+<td><p>Num</p></td>
+<td><p>Transport error code; simulates a failed call</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">errorMessage</span></code></p></td>
+<td><p>String</p></td>
+<td><p>Error text reported through <code class="docutils literal notranslate"><span class="pre">Http.errorMessage</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Setting <code class="docutils literal notranslate"><span class="pre">error</span></code> makes the call behave like a real transport failure: <code class="docutils literal notranslate"><span class="pre">Http.get</span></code>
+returns <code class="docutils literal notranslate"><span class="pre">null</span></code> and <code class="docutils literal notranslate"><span class="pre">Http.error</span></code> is non-zero. That is how you test the <code class="docutils literal notranslate"><span class="pre">if</span> <span class="pre">(!charge)</span></code>
+branch above.</p>
+<section id="patterns-and-call-records">
+<h3>Patterns and call records<a class="headerlink" href="#patterns-and-call-records" title="Link to this heading">#</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">pattern</span></code> is the full URL, with <code class="docutils literal notranslate"><span class="pre">*</span></code> as a wildcard:</p>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">stubHttp</span><span class="p">(</span><span class="s2">"https://api.example.com/*"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="o">...</span><span class="p">})</span><span class="w">        </span><span class="c1">// every path on the host</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">stubHttp</span><span class="p">(</span><span class="s2">"https://api.example.com/charge"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="o">...</span><span class="p">})</span><span class="w">   </span><span class="c1">// exactly this URL</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">stubHttp</span><span class="p">(</span><span class="s2">"https://api.example.com/*/refund"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="o">...</span><span class="p">})</span><span class="w"> </span><span class="c1">// any prefix, then /refund</span>
+</pre></div>
+</div>
+<p>The first registered match wins. Register the specific stub before the broad one,
+and call <code class="docutils literal notranslate"><span class="pre">Test.clearHttpStubs()</span></code> before the file ends so a later file does not
+inherit them.</p>
+<p><code class="docutils literal notranslate"><span class="pre">Test.httpCalls</span></code> records the matched calls in order:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">url</span></code></p></td>
+<td><p>The full URL that was requested</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>The HTTP method</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">headers</span></code></p></td>
+<td><p>Request headers, Map with lowercased names</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">body</span></code></p></td>
+<td><p>The request body as sent</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Only matched calls are recorded. An unmatched URL is not stubbed, so it goes to
+the real network with the real timeout — slow tests, flaky failures, and a live
+third party receiving your test data.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: an unmatched URL still hits the network. If a test is slow or
+fails only in CI, check the stub pattern first. A pattern needs the full URL,
+scheme included; <code class="docutils literal notranslate"><span class="pre">&quot;api.example.com/*&quot;</span></code> does not match anything.</p>
+<p>⚠️ Pitfall: a redirect is still followed above a stub. The target needs its
+own stub, or it reaches the network.</p>
+</div></blockquote>
+</section>
+</section>
+<section id="deterministic-time-and-randomness">
+<h2>Deterministic Time and Randomness<a class="headerlink" href="#deterministic-time-and-randomness" title="Link to this heading">#</a></h2>
+<p>Two test helpers remove the usual sources of flakiness. Both are process-wide,
+so route handlers see them too, and the runner resets both before each test
+file.</p>
+<section id="freezing-time">
+<h3>Freezing time<a class="headerlink" href="#freezing-time" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">freezeTime</span><span class="p">(</span><span class="mf">1767225600</span><span class="p">)</span><span class="w">               </span><span class="c1">// epoch seconds</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">freezeTime</span><span class="p">(</span><span class="nc">Date</span><span class="o">.</span><span class="n">new</span><span class="p">(</span><span class="mf">2026</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1</span><span class="p">))</span><span class="w">     </span><span class="c1">// a Date</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">freezeTime</span><span class="p">(</span><span class="s2">"2026-01-01 08:00:00"</span><span class="p">)</span><span class="w">    </span><span class="c1">// a "YYYY-MM-DD HH:MM:SS" string</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/reports/2026-01"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"January"</span><span class="p">)</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">unfreezeTime</span><span class="p">()</span><span class="w">                       </span><span class="c1">// or Test.freezeTime(null)</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Date</span></code> reports the frozen instant, and <code class="docutils literal notranslate"><span class="pre">Cron</span></code> decides against it. Set it at the
+top of the file that needs it, so the frozen clock sits next to the assertions
+it explains.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: <code class="docutils literal notranslate"><span class="pre">freezeTime</span></code> does not touch SQLite. <code class="docutils literal notranslate"><span class="pre">datetime('now')</span></code>,
+<code class="docutils literal notranslate"><span class="pre">strftime('%Y',</span> <span class="pre">'now')</span></code> and <code class="docutils literal notranslate"><span class="pre">CURRENT_TIMESTAMP</span></code> keep returning the real clock
+time. If a query compares against <code class="docutils literal notranslate"><span class="pre">datetime('now')</span></code>, pass the frozen value as
+a parameter instead, or assert against the real date.</p>
+</div></blockquote>
+</section>
+<section id="seeding-randomness">
+<h3>Seeding randomness<a class="headerlink" href="#seeding-randomness" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">(</span><span class="mf">7</span><span class="p">)</span>
+<span class="k">var</span><span class="w"> </span><span class="n">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Util</span><span class="o">.</span><span class="n">randomString</span><span class="p">(</span><span class="mf">32</span><span class="p">)</span><span class="w">   </span><span class="c1">// same value on every run</span>
+
+<span class="nc">Test</span><span class="o">.</span><span class="n">randomSeed</span><span class="p">()</span><span class="w">                   </span><span class="c1">// restore the OS CSPRNG</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">randomSeed</span></code> makes <code class="docutils literal notranslate"><span class="pre">Util.randomString</span></code> — and the session ids, CSRF tokens and
+tokens built on it — repeatable. Use it when a test needs to know a generated
+value in advance. Call <code class="docutils literal notranslate"><span class="pre">Test.randomSeed()</span></code> with no argument to restore the OS
+CSPRNG.</p>
+</section>
+</section>
+<section id="database-isolation">
+<span id="id2"></span><h2>Database Isolation<a class="headerlink" href="#database-isolation" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">bialet</span> <span class="pre">-T</span></code> never touches your development database. It creates one temporary
+database file for the run and rolls each test file back when it finishes:</p>
+<ol class="arabic simple">
+<li><p>A temporary database file is created.</p></li>
+<li><p>Migrations run once, before any test file (<code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or
+<code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>).</p></li>
+<li><p>For each test file: a savepoint is opened, <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> runs inside
+it, the file runs, and the savepoint is rolled back.</p></li>
+<li><p>The temporary database is deleted when the run ends.</p></li>
+</ol>
+<p>So each test file starts from the same migrated state plus whatever
+<code class="docutils literal notranslate"><span class="pre">_init.wren</span></code> seeds, and anything the file writes is gone when it finishes. Data
+does not leak between files, and file order does not matter.</p>
+<p>Read rows you inserted in the same file: a second file cannot see them, by
+design.</p>
+<blockquote>
+<div><p>⚠️ Pitfall: do not run <code class="docutils literal notranslate"><span class="pre">VACUUM</span></code> or <code class="docutils literal notranslate"><span class="pre">PRAGMA</span> <span class="pre">journal_mode</span></code> in a test file. Both
+rewrite the database file outside the savepoint, which either fails or leaves
+the file in a state the rollback cannot undo.</p>
+</div></blockquote>
+<blockquote>
+<div><p>⚠️ Pitfall: do not leave a transaction open. A <code class="docutils literal notranslate"><span class="pre">BEGIN</span></code> without a matching
+<code class="docutils literal notranslate"><span class="pre">COMMIT</span></code> or <code class="docutils literal notranslate"><span class="pre">ROLLBACK</span></code> leaves the savepoint stack dirty, and the runner’s
+rollback at the end of the file has nothing clean to close.</p>
+</div></blockquote>
 </section>
 <section id="best-practices">
 <h2>Best Practices<a class="headerlink" href="#best-practices" title="Link to this heading">#</a></h2>
@@ -960,62 +1420,114 @@ multi-word assertion does not depend on how the template wraps the line.</p>
 </pre></div>
 </div>
 </section>
-</section>
-<section id="database-isolation">
-<h2>Database Isolation<a class="headerlink" href="#database-isolation" title="Link to this heading">#</a></h2>
-<p>Tests run against a <strong>temporary database file</strong> that is created fresh for each test run:</p>
-<ol class="arabic simple">
-<li><p>A temporary database file is created</p></li>
-<li><p>Migrations are automatically run (<code class="docutils literal notranslate"><span class="pre">_migration.wren</span></code> or <code class="docutils literal notranslate"><span class="pre">_app/migration.wren</span></code>)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> runs (if exists)</p></li>
-<li><p>Test files execute</p></li>
-<li><p>Temporary database is deleted</p></li>
-</ol>
-<p>This ensures tests don’t pollute your development or production database.</p>
-</section>
-<section id="complete-example">
-<h2>Complete Example<a class="headerlink" href="#complete-example" title="Link to this heading">#</a></h2>
-<p><strong>Application file:</strong> <code class="docutils literal notranslate"><span class="pre">hi.wren</span></code></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="k">return</span><span class="w"> </span><span class="x">&lt;h1&gt;👋 Hello World&lt;/h1&gt;</span>
+<section id="test-the-flow-not-the-page">
+<h3>Test the flow, not the page<a class="headerlink" href="#test-the-flow-not-the-page" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Weak: the page exists</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+
+<span class="c1">// Strong: the write is visible on the next read</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"title"</span><span class="o">:</span><span class="w"> </span><span class="s2">"Buy bread"</span><span class="p">})</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">302</span><span class="p">)</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tasks"</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Buy bread"</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Test file:</strong> <code class="docutils literal notranslate"><span class="pre">_tests/hi.wren</span></code></p>
-<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
+</section>
+<section id="cover-a-boundary-not-the-middle">
+<h3>Cover a boundary, not the middle<a class="headerlink" href="#cover-a-boundary-not-the-middle" title="Link to this heading">#</a></h3>
+<p>One mid-month date proves little. Test the first and last day of a month, an
+empty table, and a value that is exactly at the limit. Freeze the clock for the
+date cases (see <a class="reference internal" href="#deterministic-time-and-randomness">Deterministic Time and Randomness</a>).</p>
+</section>
+</section>
+<section id="api-testing-examples">
+<h2>API Testing Examples<a class="headerlink" href="#api-testing-examples" title="Link to this heading">#</a></h2>
+<section id="json-response-testing">
+<h3>JSON Response Testing<a class="headerlink" href="#json-response-testing" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Parse JSON response</span>
+<span class="k">var</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">data</span><span class="w"> </span><span class="ow">is</span><span class="w"> </span><span class="nc">List</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected JSON array"</span><span class="p">)</span>
+
+<span class="c1">// Insert test data</span>
+<span class="sb">`INSERT OR REPLACE INTO counter (name, value) VALUES ('test1', 10)`</span><span class="o">.</span><span class="n">query</span><span class="p">()</span>
+
+<span class="c1">// Complex validation with parsed JSON</span>
+<span class="k">var</span><span class="w"> </span><span class="n">counters</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">Test</span><span class="o">.</span><span class="n">apiGet</span><span class="p">(</span><span class="s2">"/json"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counters</span><span class="o">.</span><span class="n">count</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected at least 2 counters"</span><span class="p">)</span>
+
+<span class="c1">// Iterate and validate specific values</span>
+<span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="w"> </span><span class="ow">in</span><span class="w"> </span><span class="n">counters</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"test1"</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nc">Test</span><span class="o">.</span><span class="n">assert</span><span class="p">(</span><span class="n">counter</span><span class="p">[</span><span class="s2">"value"</span><span class="p">]</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s2">"10"</span><span class="p">,</span><span class="w"> </span><span class="s2">"Expected value '10'"</span><span class="p">)</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="mixed-assertion-styles">
+<h3>Mixed Assertion Styles<a class="headerlink" href="#mixed-assertion-styles" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Simple contains check</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">)</span>
+
+<span class="c1">// Exact match</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
 <span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
-<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello World"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">equals</span><span class="p">(</span><span class="s2">"&lt;h1&gt;👋 Hello World&lt;/h1&gt;"</span><span class="p">)</span>
+
+<span class="c1">// Multiple chained assertions</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"Hello"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"World"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Goodbye"</span><span class="p">)</span>
 </pre></div>
 </div>
-<p><strong>Run tests:</strong></p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
-Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
+</section>
+<section id="security-and-negative-assertions">
+<h3>Security and Negative Assertions<a class="headerlink" href="#security-and-negative-assertions" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="c1">// Test what should NOT be present</span>
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"abc"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"xyz"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span>
 
-<span class="w">  </span>✓<span class="w"> </span>hi.wren<span class="w"> </span><span class="o">(</span>5ms<span class="o">)</span>
-
-Summary:
-
-Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
-Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
-Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
-Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
-Elapsed<span class="w"> </span>Time:<span class="w"> </span>5ms
+<span class="nc">Test</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/hi"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Error"</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">notContains</span><span class="p">(</span><span class="s2">"Failed"</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>A failing assertion reports the file and the <code class="docutils literal notranslate"><span class="pre">Fiber.abort</span></code> message under it:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>bialet<span class="w"> </span>-T
-Running<span class="w"> </span>tests<span class="w"> </span><span class="k">in</span><span class="w"> </span>_tests...
+</section>
+<section id="form-testing">
+<h3>Form Testing<a class="headerlink" href="#form-testing" title="Link to this heading">#</a></h3>
+<div class="highlight-wren notranslate"><div class="highlight"><pre><span></span><span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are the same"</span><span class="p">)</span>
 
-<span class="w">  </span>✗<span class="w"> </span>hi.wren
-<span class="w">      </span>Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> </span>be<span class="w"> </span><span class="m">200</span><span class="w"> </span>but<span class="w"> </span>was<span class="w"> </span><span class="m">500</span>
-
-Summary:
-
-Total<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
-Passed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
-Failed<span class="w"> </span>Tests:<span class="w"> </span><span class="m">1</span>
-Skipped<span class="w"> </span>Tests:<span class="w"> </span><span class="m">0</span>
-Elapsed<span class="w"> </span>Time:<span class="w"> </span>20ms
+<span class="nc">Test</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="s2">"/password"</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="s2">"password"</span><span class="o">:</span><span class="w"> </span><span class="s2">"123"</span><span class="p">,</span><span class="w"> </span><span class="s2">"password-check"</span><span class="o">:</span><span class="w"> </span><span class="s2">"321"</span><span class="p">})</span>
+<span class="w">    </span><span class="o">.</span><span class="n">status</span><span class="p">(</span><span class="mf">200</span><span class="p">)</span>
+<span class="w">    </span><span class="o">.</span><span class="n">contains</span><span class="p">(</span><span class="s2">"The passwords are different"</span><span class="p">)</span>
 </pre></div>
 </div>
+</section>
+</section>
+<section id="how-it-works">
+<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
+<ol class="arabic simple">
+<li><p><strong>Module per file</strong>: each test file compiles as its own Wren module with the
+runner prelude (<code class="docutils literal notranslate"><span class="pre">Test</span></code>, <code class="docutils literal notranslate"><span class="pre">Tests</span></code>, <code class="docutils literal notranslate"><span class="pre">Fixture</span></code>). Relative imports resolve from
+<code class="docutils literal notranslate"><span class="pre">_tests/</span></code>, and <code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> runs in the same module, so its top-level
+variables are visible to the file.</p></li>
+<li><p><strong>Request Building</strong>: the <code class="docutils literal notranslate"><span class="pre">Test</span></code> class builds an HTTP request (method,
+headers, body).</p></li>
+<li><p><strong>Internal Routing</strong>: instead of opening a socket, the test runner invokes the
+real router and the Wren handler directly, in a fresh VM per request.</p></li>
+<li><p><strong>Response Capture</strong>: the response (status, headers, body) is captured and
+wrapped.</p></li>
+<li><p><strong>Assertions</strong>: each assertion checks the response and reports failures. The
+first failure aborts the file.</p></li>
+<li><p><strong>Database</strong>: one temporary database per run. Migrations run once, then each
+test file runs inside a savepoint that is rolled back when the file ends.</p></li>
+</ol>
+<p>This approach is fast (no network overhead), reliable (no port conflicts), and
+safe (a throwaway database, rolled back per file).</p>
 </section>
 <section id="exit-codes">
 <h2>Exit Codes<a class="headerlink" href="#exit-codes" title="Link to this heading">#</a></h2>
@@ -1046,17 +1558,6 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
 <span class="w">  </span><span class="nt">run</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">bialet -T -q</span>
 </pre></div>
 </div>
-</section>
-<section id="how-it-works">
-<h2>How It Works<a class="headerlink" href="#how-it-works" title="Link to this heading">#</a></h2>
-<ol class="arabic simple">
-<li><p><strong>Request Building</strong>: The <code class="docutils literal notranslate"><span class="pre">Test</span></code> class builds an HTTP request (method, headers, body)</p></li>
-<li><p><strong>Internal Routing</strong>: Instead of making actual HTTP calls, the test runner directly invokes the Wren handler</p></li>
-<li><p><strong>Response Capture</strong>: The response (status, headers, body) is captured and wrapped</p></li>
-<li><p><strong>Assertions</strong>: Each assertion checks the response and reports failures</p></li>
-<li><p><strong>Database</strong>: All database operations happen on a temp DB, isolated from your main data</p></li>
-</ol>
-<p>This approach is fast (no network overhead), reliable (no port conflicts), and safe (isolated database).</p>
 </section>
 </section>
 
@@ -1107,6 +1608,11 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#running-tests">Running Tests</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#writing-your-first-test">Writing Your First Test</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#where-the-test-goes">Where the test goes</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#arrange-act-assert">Arrange, act, assert</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-directory-structure">Test Directory Structure</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#test-initialization">Test Initialization</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#tests-init-wren-optional"><code class="docutils literal notranslate"><span class="pre">_tests/_init.wren</span></code> (Optional)</a></li>
@@ -1127,26 +1633,41 @@ Expected<span class="w"> </span>code<span class="w"> </span>to<span class="w"> <
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-tests-in-one-file">Multiple Tests in One File</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#multiple-test-patterns">Multiple Test Patterns</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-test-examples">Complete Test Examples</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#testing-components-and-domain-classes">Testing Components and Domain Classes</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#components">Components</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#domain-classes-that-read-session">Domain classes that read <code class="docutils literal notranslate"><span class="pre">Session</span></code></a></li>
 </ul>
 </li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-fixture-class">The <code class="docutils literal notranslate"><span class="pre">Fixture</span></code> Class</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#stubbing-outbound-http-calls">Stubbing Outbound HTTP Calls</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#patterns-and-call-records">Patterns and call records</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#deterministic-time-and-randomness">Deterministic Time and Randomness</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#freezing-time">Freezing time</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#seeding-randomness">Seeding randomness</a></li>
+</ul>
+</li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#best-practices">Best Practices</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-appropriate-assertion-methods">Use Appropriate Assertion Methods</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-testing">Security Testing</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#use-custom-assertions-for-complex-logic">Use Custom Assertions for Complex Logic</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#chain-related-assertions">Chain Related Assertions</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-both-success-and-failure-cases">Test Both Success and Failure Cases</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#test-the-flow-not-the-page">Test the flow, not the page</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#cover-a-boundary-not-the-middle">Cover a boundary, not the middle</a></li>
 </ul>
 </li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#database-isolation">Database Isolation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#complete-example">Complete Example</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#api-testing-examples">API Testing Examples</a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#json-response-testing">JSON Response Testing</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mixed-assertion-styles">Mixed Assertion Styles</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#security-and-negative-assertions">Security and Negative Assertions</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#form-testing">Form Testing</a></li>
+</ul>
+</li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#how-it-works">How It Works</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#exit-codes">Exit Codes</a></li>
 </ul>
   </nav></div>
 

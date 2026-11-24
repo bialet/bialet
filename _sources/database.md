@@ -432,6 +432,11 @@ ignores missing table and column errors, so a `CREATE TABLE` followed by an
 with `--no-watch` to stop the save-triggered run, check the file with `-t`, then
 restart the server to apply it.
 
+Under `bialet -T`, the runner applies the migrations once before any test file,
+then runs each file inside a savepoint that is rolled back when the file
+finishes. Nothing a test writes survives the run, so a test is free to change
+rows. See [Testing in Bialet](tests.md#database-isolation).
+
 ### Migration SQL Pitfall
 
 > ⚠️ Pitfall: the SQL argument must be a backtick query literal, not a
@@ -461,7 +466,80 @@ Db.migrate("init", `
 The name of the migration is used to avoid repeating migrations. Use a
 descriptive name.
 
-You can have multiples queries separated by `;`.
+You can have multiples queries separated by `;`. The split honours SQL syntax:
+a `;` inside `'a;b'`, `"an;identifier"`, `[a;b]`, a `-- comment`, a
+`/* block comment */` or a `CREATE TRIGGER ... BEGIN ...; ... END;` body does
+not end a statement.
+
+### Atomic migrations
+
+Every `Db.migrate` call runs as one unit. The statements and the row in
+`BIALET_MIGRATIONS` commit together, so a migration that fails leaves nothing
+behind: no table, no half-copied column and no version row. Fix the SQL and
+restart; the migration runs again from the start.
+
+```wren
+Db.migrate("Add note", `
+  CREATE TABLE note (id INTEGER PRIMARY KEY, body TEXT);
+  INSERT INTO note (body) VALUES ('first');
+`)
+```
+
+Two workers starting at the same time serialize on the write lock, and the
+second one finds the version row and does nothing. Each call is atomic on its
+own, but the order in which two processes apply different migrations is not
+guaranteed, so start multiple workers one at a time.
+
+A migration that can only run outside a transaction takes `false` as the third
+argument:
+
+```wren
+Db.migrate("Reclaim space", `VACUUM`, false)
+Db.migrate("Rebuild note", `
+  PRAGMA foreign_keys = OFF;
+  CREATE TABLE note_new (id INTEGER PRIMARY KEY, body TEXT);
+  INSERT INTO note_new SELECT id, body FROM note;
+  DROP TABLE note;
+  ALTER TABLE note_new RENAME TO note;
+  PRAGMA foreign_keys = ON;
+`, false)
+```
+
+That is the whole escape hatch. `VACUUM`, a change of `PRAGMA journal_mode` and
+the `PRAGMA foreign_keys = OFF` table rebuild cannot run inside a transaction;
+SQLite either rejects them or, for the foreign-key pragma, silently ignores the
+change. With `false` the statements and the version row run one at a time, so a
+failure leaves the statements that already ran applied and no version row.
+Re-running after the fix repeats them. Accept that risk deliberately; prefer
+`true` (the default) for everything else.
+
+> ⚠️ Pitfall: a migration name is the dedup key, not a version you bump. Editing
+> an already-applied migration does not re-run it and does not undo it. Write a
+> new migration with a new name, or restore the backup.
+
+The version row also stores a SHA-256 hash of the migration SQL. Editing an
+applied migration logs:
+
+```
+Warning: migration 'Add note' changed after it was applied; the new SQL will not run.
+```
+
+The SQL does not run again — running an edited migration on a database that
+already holds the first version's effects is unsafe. The hash covers the SQL
+exactly as written, so whitespace and comment edits are detected too. A `Fn`
+callback has no SQL text and stores no hash, so editing a callback is not
+detected. Rows from older binaries have no hash; the next boot fills it in
+without a warning.
+
+A list applies each item as one statement, with no further split. Use it when a
+statement legitimately contains `;` or when you want the statements kept apart:
+
+```wren
+Db.migrate("Seed config", [
+  `INSERT INTO BIALET_CONFIG VALUES ('title', 'Bialet example page')`,
+  `INSERT INTO BIALET_CONFIG VALUES ('perPage', '10')`
+])
+```
 
 Use migration to insert non-transactional data. You can interact with the
 `BIALET_*` tables.

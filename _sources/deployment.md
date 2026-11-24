@@ -885,7 +885,9 @@ loses them.
 To restore, stop Bialet, replace `_db.sqlite3` with the backup, remove any
 stale `-wal`/`-shm` files, start Bialet, and load a page that reads the
 restored tables. Migrations do not run backwards, so restoring the database
-is the rollback for a bad migration.
+is the rollback for a bad migration. A migration that fails now rolls back as a
+unit, leaving no partial schema to clean up, unless it opted out with
+`Db.migrate(name, sql, false)`.
 
 ## Upgrades and Rollback
 
@@ -894,7 +896,8 @@ Deploy](#no-restart-needed-on-deploy)). The binary does: stop the service,
 replace it, start it.
 
 1. **Back up first** — the database as above. A binary rollback cannot undo a
-   migration that already ran.
+   migration that already ran. A migration that fails rolls back before the
+   process exits, so the database keeps the schema the backup holds.
 2. **Keep the previous binary** — `cp bialet bialet.prev` before replacing it,
    or keep one directory per version and point `ExecStart=` at a symlink.
 3. **Replace atomically** — write the new binary next to the old one and
