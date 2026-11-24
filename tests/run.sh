@@ -159,6 +159,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax     "SQL schema error ignored       " "syntax_query_schema.wren" 0
   test_syntax     "Incomplete later SQL fails     " "syntax_query_incomplete.wren" 1
   test_syntax     "SQL migration passes           " "syntax_query_migration_ok.wren" 0
+  # A missing table makes prepare stop mid-statement (before COLUMN); the rest
+  # is not a new statement and must not be reported as a syntax error.
+  test_syntax     "ALTER on a missing table passes" "syntax_query_alter.wren" 0
+  test_syntax_msg "Typo after a schema error fails" "syntax_query_alter_then_err.wren" 1 "syntax error"
   # `items`.save(...) passes a table name, not SQL; it still has to pass.
   test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
   # A directory target validates the whole tree: private files and subfolders
