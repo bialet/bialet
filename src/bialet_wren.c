@@ -2212,16 +2212,30 @@ static const char* validate_query_syntax(const char* query) {
     if(rc != SQLITE_OK) {
       const char* error = sqlite3_errmsg(db);
       int         is_syntax = error != NULL && is_sql_syntax_error(error);
-      if(is_syntax)
-        snprintf(message, sizeof(message), "%s", error);
+      const char* semi;
+      const char* next;
       sqlite3_finalize(stmt);
-      if(is_syntax)
+      if(is_syntax) {
+        snprintf(message, sizeof(message), "%s", error);
         return message;
-      // Not ours to report, but tail still points at the next statement, so
-      // keep checking the rest of a multi-statement literal.
-      if(tail == NULL || tail <= sql)
+      }
+      // Not ours to report: it depends on the schema, and -t never applies a
+      // migration. Resuming from tail alone is wrong, though: on a
+      // prepare-time schema error SQLite may stop *inside* the statement
+      // (`ALTER TABLE nope ADD COLUMN x` leaves tail before COLUMN), and the
+      // rest would be parsed as a new statement and reported as a bogus syntax
+      // error. Db.migrate splits the literal on ';', so the next statement
+      // starts after the first ';' of this one -- or at tail, if that already
+      // moved past it.
+      semi = strchr(sql, ';');
+      next = tail;
+      if(semi != NULL && (next == NULL || semi + 1 > next))
+        next = semi + 1;
+      // No ';' means this was the last statement of the literal: tail points
+      // inside it, so there is nothing left to check.
+      if(semi == NULL || next == NULL || next <= sql)
         break;
-      sql = tail;
+      sql = next;
       continue;
     }
 
