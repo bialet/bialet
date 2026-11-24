@@ -2414,8 +2414,15 @@ static int validate_sql_repair(const char* error, char** created,
          *created_count > 0)
         snprintf(table, sizeof(table), "%s", created[*created_count - 1]);
     }
-    return validate_sql_dummy_column(table, name + (dot ? (dot - name) + 1 : 0),
-                                     created, created_count);
+    const char* column = name + (dot ? (dot - name) + 1 : 0);
+    if(strlen(column) > VALIDATE_SQL_MAX_NAME)
+      return 0;
+    // validate_sql_dummy_column() runs sqlite3_exec() before it quotes the
+    // argument, and SQLite documents the error-message buffer as valid only
+    // until the next API call. Copy the name out first.
+    char column_copy[VALIDATE_SQL_MAX_NAME + 1];
+    snprintf(column_copy, sizeof(column_copy), "%s", column);
+    return validate_sql_dummy_column(table, column_copy, created, created_count);
   }
 
   // INSERT names a missing column differently: "table t has no column named x".
@@ -2430,9 +2437,13 @@ static int validate_sql_repair(const char* error, char** created,
       table[len] = '\0';
       validate_sql_strip_schema(table);
       const char* column = marker + strlen(" has no column named ");
-      if(*column == '\0')
+      if(*column == '\0' || strlen(column) > VALIDATE_SQL_MAX_NAME)
         return 0;
-      return validate_sql_dummy_column(table, column, created, created_count);
+      // Same expired-buffer reason as above: the dummy table is created (an
+      // sqlite3_exec call) before the column is quoted.
+      char column_copy[VALIDATE_SQL_MAX_NAME + 1];
+      snprintf(column_copy, sizeof(column_copy), "%s", column);
+      return validate_sql_dummy_column(table, column_copy, created, created_count);
     }
   }
 
