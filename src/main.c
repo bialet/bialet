@@ -117,17 +117,22 @@ static pthread_mutex_t run_mutex = PTHREAD_MUTEX_INITIALIZER;
 // background callers discarded the struct, leaking a page-sized allocation on
 // every migration and on every cron tick -- once a minute, forever, in the
 // long-lived supervisor process.
-static void bialet_run_discard(const char* module, char* code, char* log_label) {
+// Returns 1 when the discarded run failed (compile/runtime error or a non-2xx
+// status the module set), 0 otherwise. The -T path needs the migration's status
+// so a broken migration can fail the run instead of vanishing under -q.
+static int bialet_run_discard(const char* module, char* code, char* log_label) {
   struct BialetResponse r = bialet_run((char*)module, code, 0);
+  int                   failed = r.status >= 400;
   if(log_label != NULL)
     message(yellow(log_label), r.body ? r.body : "");
   if(r.body_owned)
     free(r.body);
   if(r.header_owned)
     free(r.header);
+  return failed;
 }
 
-static void migrate() {
+static int migrate() {
   char* code;
   char  path[MAX_PATH_LEN];
   char  altPath[MAX_PATH_LEN];
@@ -141,20 +146,22 @@ static void migrate() {
      snprintf(altPath, sizeof(altPath), "%s%s", bialet_config.full_root_dir,
               MIGRATION_FILE_ALT) >= (int)sizeof(altPath)) {
     message(red("Error"), "Migration path too long");
-    return;
+    return 1;
   }
 #ifndef _WIN32
   pthread_mutex_lock(&run_mutex);
 #endif
+  int failed;
   if((code = read_file(path)) || (code = read_file(altPath))) {
-    bialet_run_discard("migration", code, "Migration start");
+    failed = bialet_run_discard("migration", code, "Migration start");
     free(code); // the file contents were leaked too
   } else {
-    bialet_run_discard("migration", "Db.init", NULL);
+    failed = bialet_run_discard("migration", "Db.init", NULL);
   }
 #ifndef _WIN32
   pthread_mutex_unlock(&run_mutex);
 #endif
+  return failed;
 }
 
 static void install_cron() {
@@ -815,14 +822,29 @@ int main(int argc, char* argv[]) {
         quiet_prev_log = message_set_log_file(quiet_sink);
     }
 
-    // Run migrations on temp database
-    migrate();
+    // Run migrations on temp database. A migration that fails to compile or
+    // apply must fail the run: the suite alone can pass against a schema that
+    // was never created.
+    int migration_failed = migrate();
 
     // Run tests
     if(test_dir == NULL) {
       test_dir = bialet_config.root_dir;
     }
     int result = bialet_run_tests(test_dir, bialet_config.root_dir);
+
+    if(migration_failed) {
+      result = 1;
+      // Under -q the sink swallowed the migration diagnostics; replay them, as
+      // the -t capture does, so a deploy gate cannot fail silently.
+      if(quiet_sink != NULL) {
+        rewind(quiet_sink);
+        char   replay[1024];
+        size_t n;
+        while((n = fread(replay, 1, sizeof(replay), quiet_sink)) > 0)
+          fwrite(replay, 1, n, stderr);
+      }
+    }
 
     if(quiet_sink != NULL) {
       message_set_log_file(quiet_prev_log);

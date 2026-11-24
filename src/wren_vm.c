@@ -401,8 +401,10 @@ static void runtimeError(WrenVM* vm) {
     current = caller;
   }
 
-  // If we got here, nothing caught the error, so show the stack trace.
-  wrenDebugPrintStackTrace(vm, showStackTrace);
+  // If we got here, nothing caught the error, so show the stack trace. The
+  // test-capture path still wants the frames callback even when the frame is
+  // not printed (a failed import), to record the failure line.
+  wrenDebugPrintStackTrace(vm, showStackTrace || vm->captureStackTrace);
   vm->fiber = NULL;
   vm->apiStack = NULL;
 }

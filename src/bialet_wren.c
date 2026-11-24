@@ -723,21 +723,28 @@ void bialet_wren_error(WrenVM* vm, WrenErrorType errorType, const char* module,
     return;
   }
   char lineMessage[MAX_LINE_ERROR_LEN];
-  int  line_len =
-      snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
-  if(line_len < 0) {
-    lineMessage[0] = '\0';
-  } else if((size_t)line_len >= sizeof(lineMessage)) {
-    // Pathological path: keep the end of the module name, which is the part
-    // that identifies the file, and the suffix. Before, a name over the limit
-    // lost the line number instead.
-    char   suffix[32];
-    int    suffix_written = snprintf(suffix, sizeof(suffix), " line %d", line);
-    size_t suffix_len = suffix_written > 0 ? (size_t)suffix_written : 0;
-    size_t keep = sizeof(lineMessage) - 1 - suffix_len - 3; // "..." + NUL
-    size_t module_len = strlen(module);
-    snprintf(lineMessage, sizeof(lineMessage), "...%s%s",
-             module_len > keep ? module + (module_len - keep) : module, suffix);
+  lineMessage[0] = '\0';
+  // Wren passes module == NULL and line == -1 for WREN_ERROR_RUNTIME; only the
+  // two branches that name a module use the prefix, so do not format it there
+  // (%s with a null pointer is undefined).
+  if((errorType == WREN_ERROR_COMPILE || errorType == WREN_ERROR_STACK_TRACE) &&
+     module != NULL) {
+    int line_len =
+        snprintf(lineMessage, sizeof(lineMessage), "%s line %d", module, line);
+    if(line_len < 0) {
+      lineMessage[0] = '\0';
+    } else if((size_t)line_len >= sizeof(lineMessage)) {
+      // Pathological path: keep the end of the module name, which is the part
+      // that identifies the file, and the suffix. Before, a name over the limit
+      // lost the line number instead.
+      char   suffix[32];
+      int    suffix_written = snprintf(suffix, sizeof(suffix), " line %d", line);
+      size_t suffix_len = suffix_written > 0 ? (size_t)suffix_written : 0;
+      size_t keep = sizeof(lineMessage) - 1 - suffix_len - 3; // "..." + NUL
+      size_t module_len = strlen(module);
+      snprintf(lineMessage, sizeof(lineMessage), "...%s%s",
+               module_len > keep ? module + (module_len - keep) : module, suffix);
+    }
   }
   // Wren error text can embed request bytes (Fiber.abort of a request value,
   // or a parse error quoting the input it rejected). Escape it for
@@ -1628,6 +1635,9 @@ struct BialetResponse bialet_run_file(char* module, char* code,
   show_errors_clear();
 
   vm = wrenNewVM(&wren_config);
+  // The -T runner learns the failure line from the stack-trace callback, so it
+  // must keep receiving frames even when a failed import suppresses printing.
+  vm->captureStackTrace = test_capturing != 0;
   wrenInterpret(vm, MAIN_MODULE_NAME, MAIN_MODULE_SOURCE);
   if(hm) {
     /* Initialize request */
@@ -2555,8 +2565,9 @@ int bialet_run_tests(const char* testDir, const char* rootDir) {
   }
 
   if(testCount == 0) {
-    if(!quiet)
-      printf("No tests found.\n");
+    // Print even under -q: a CI gate must not pass with a suite that collected
+    // nothing while looking like a silent success.
+    printf("No tests found.\n");
     return 0;
   }
 

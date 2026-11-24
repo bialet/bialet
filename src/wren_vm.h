@@ -111,6 +111,11 @@ struct WrenVM {
   // clears it as soon as it consumes it.
   bool suppressStackTrace;
 
+  // Set by the -T runner while it captures failures. The capture needs the
+  // stack-trace callback to learn the failure line, even when the frame is not
+  // printed (a failed import); the host callback writes to its own buffer.
+  bool captureStackTrace;
+
   // Compiler and debugger data:
 
   // The compiler that is currently compiling code. This is used so that heap

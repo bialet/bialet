@@ -113,6 +113,7 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax_errors "Newline ends an open string " "syntax_err_string_newline.wren" 1 1 "Unterminated string."
   test_syntax_msg "HTML statement names literal" "syntax_err_html_statement.wren" 1 "HTML literal used as a statement is discarded"
   test_syntax_errors "Stray literal, one error    " "syntax_err_html_statement.wren" 1 1 "line 7 Error"
+  test_syntax "HTML mid-statement passes    " "syntax_ok_html_statement_mid.wren" 0
   # The error is reported at the line the literal was opened on, and the
   # swallowed newline is not counted twice for the tokens after it.
   if [[ "$TARGET_EXEC" != "-" ]]; then
@@ -2559,6 +2560,67 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
 else
   skip_test "-T -q silences migrations    " "requires local binary access"
   skip_test "-T keeps migration output    " "requires local binary access"
+fi
+
+# A failing migration must fail the run, and -q must replay its diagnostics
+# instead of discarding them. A suite with no files must still say so under -q.
+# An import that fails inside a test file must report its import line, not :0.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  migrun_line=$LINENO
+  _test_start_ms=$(now_ms)
+  migrun_exe=$(realpath "$TARGET_EXEC")
+  migrun_parent=$(mktemp -d)
+  migrun_root="$migrun_parent/migfail"
+  mkdir -p "$migrun_root/_tests"
+  printf 'var = 1\n' > "$migrun_root/_migration.wren"
+  printf 'Test.assert(true, "ok")\n' > "$migrun_root/_tests/pass.wren"
+  printf '<p>ok' > "$migrun_root/index.html"
+  migrun_quiet_err=$(cd "$migrun_parent" &&
+    "$migrun_exe" -T migfail -q 2>&1 >/dev/null)
+  migrun_quiet_code=$?
+  migrun_plain=$(cd "$migrun_parent" && "$migrun_exe" -T migfail 2>&1)
+  migrun_plain_code=$?
+
+  emptyq_root="$migrun_parent/emptysuite"
+  mkdir -p "$emptyq_root/_tests"
+  printf '<p>ok' > "$emptyq_root/index.html"
+  emptyq_out=$(cd "$migrun_parent" && "$migrun_exe" -T emptysuite -q 2>&1)
+  emptyq_code=$?
+
+  imp_root="$migrun_parent/importfail"
+  mkdir -p "$imp_root/_tests"
+  printf 'var = 1\n' > "$imp_root/lib.wren"
+  printf 'import "/lib"\nTest.assert(true, "ok")\n' > "$imp_root/_tests/t.wren"
+  printf '<p>ok' > "$imp_root/index.html"
+  imp_out=$(cd "$migrun_parent" && "$migrun_exe" -T importfail 2>&1)
+  imp_code=$?
+  rm -rf "$migrun_parent"
+
+  if [[ "$migrun_quiet_code" != 0 &&
+        "$migrun_quiet_err" == *"Compilation Error"* &&
+        "$migrun_plain_code" != 0 &&
+        "$migrun_plain" == *"Compilation Error"* ]]; then
+    report_result "Failed migration fails run   " "$migrun_line" 0
+  else
+    report_result "Failed migration fails run   " "$migrun_line" 1 \
+      "quiet($migrun_quiet_code):'${migrun_quiet_err:0:120}' plain($migrun_plain_code):'${migrun_plain:0:120}'"
+  fi
+  if [[ "$emptyq_code" == 0 && "$emptyq_out" == *"No tests found."* ]]; then
+    report_result "-q empty suite says so       " "$migrun_line" 0
+  else
+    report_result "-q empty suite says so       " "$migrun_line" 1 \
+      "code($emptyq_code):'${emptyq_out:0:120}'"
+  fi
+  if [[ "$imp_code" != 0 && "$imp_out" == *"Could not compile module"* ]]; then
+    report_result "Import failure fails the run " "$migrun_line" 0
+  else
+    report_result "Import failure fails the run " "$migrun_line" 1 \
+      "code($imp_code):'${imp_out:0:200}'"
+  fi
+else
+  skip_test "Failed migration fails run   " "requires local binary access"
+  skip_test "-q empty suite says so       " "requires local binary access"
+  skip_test "Import failure fails the run " "requires local binary access"
 fi
 
 # -t (validate) must refuse a file it cannot resolve, and a file outside the

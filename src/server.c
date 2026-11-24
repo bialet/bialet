@@ -463,8 +463,11 @@ static int is_regular_file_no_follow(const char* path, struct stat* st) {
 
 // The embedded favicon is a fallback, not a fixture: an app that ships its own
 // /favicon.ico gets that file served by the normal static path, so the tab icon
-// can carry the app's brand. lstat, like every other static probe, so a
-// symlinked favicon.ico is not traversed and the embedded blob still answers.
+// can carry the app's brand. The probe uses the same helper as every other
+// static check: lstat on POSIX, so a symlinked favicon.ico is not traversed and
+// the embedded blob still answers. On Windows that helper is stat(), so a
+// junction is resolved; the router's resolved-path containment check remains
+// the boundary and answers 404 when the target is outside the root.
 static int app_has_favicon(void) {
   if(bialet_config.full_root_dir == NULL)
     return 0;
