@@ -111,6 +111,8 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax_msg "Complete tag still names unclosed" "syntax_err_nest_unclosed_text.wren" 1 "Unclosed <div>: 1 open, 0 closed"
   test_syntax_msg "Trailing backslash at EOF" "syntax_err_string_trailing_escape.wren" 1 "Unterminated string."
   test_syntax_errors "Newline ends an open string " "syntax_err_string_newline.wren" 1 1 "Unterminated string."
+  test_syntax_msg "HTML statement names literal" "syntax_err_html_statement.wren" 1 "HTML literal used as a statement is discarded"
+  test_syntax_errors "Stray literal, one error    " "syntax_err_html_statement.wren" 1 1 "line 7 Error"
   # The error is reported at the line the literal was opened on, and the
   # swallowed newline is not counted twice for the tokens after it.
   if [[ "$TARGET_EXEC" != "-" ]]; then

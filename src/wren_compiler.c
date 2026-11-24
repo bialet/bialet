@@ -2476,8 +2476,26 @@ static bool finishBlock(Compiler* compiler) {
 
   // Compile the definition list.
   do {
+    Token statement = compiler->parser->current;
     definition(compiler);
-    consumeLine(compiler, "Expect newline after statement.");
+    // A statement that starts with an HTML literal is an expression whose
+    // value is dropped, and the lexer has already eaten the newline that would
+    // have ended it (it keeps one only after '=' or 'return'). Calling
+    // consumeLine() here would swallow the next token -- the '}' that closes a
+    // method body -- and report at it, which is how a stray literal used to
+    // surface as "Expect method definition" at the end of the file. Name the
+    // real mistake, at the literal's line, without consuming the '}'.
+    if((statement.type == TOKEN_HTML_NODE || statement.type == TOKEN_HTML_TEXT) &&
+       !matchLine(compiler)) {
+      Token previous = compiler->parser->previous;
+      compiler->parser->previous = statement;
+      error(compiler,
+            "HTML literal used as a statement is discarded; add 'return' or "
+            "assign it.");
+      compiler->parser->previous = previous;
+    } else {
+      consumeLine(compiler, "Expect newline after statement.");
+    }
   } while(peek(compiler) != TOKEN_RIGHT_BRACE && peek(compiler) != TOKEN_EOF);
 
   consume(compiler, TOKEN_RIGHT_BRACE, "Expect '}' at end of block.");
