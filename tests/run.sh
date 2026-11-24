@@ -169,6 +169,10 @@ if [[ "$TARGET_EXEC" != "-" ]]; then
   test_syntax     "Trigger on missing table passes" "syntax_query_alter_trigger.wren" 0
   test_syntax_msg "Trigger body typo still fails  " "syntax_query_alter_trigger_err.wren" 1 "syntax error"
   test_syntax_msg "Incomplete ALTER still fails   " "syntax_query_alter_incomplete.wren" 1 "syntax error"
+  # A schema error repaired with a dummy column must not swallow the syntax
+  # error that follows it.
+  test_syntax_msg "Typo after a column repair fails" "syntax_query_schema_column_then_err.wren" 1 "syntax error"
+  test_syntax_msg "Typo after an INSERT column repair" "syntax_query_schema_insert_then_err.wren" 1 "syntax error"
   # `items`.save(...) passes a table name, not SQL; it still has to pass.
   test_syntax     "Bare table name passes         " "syntax_query_table_ok.wren" 0
   # A directory target validates the whole tree: private files and subfolders
