@@ -2535,6 +2535,211 @@ else
   skip_test "Test runner output paths    " "requires local binary access"
 fi
 
+# The -T surface beyond pass/fail reporting. Each test file is its own module
+# (relative imports resolve from _tests/ and _init.wren's top-level vars stay
+# visible), each file runs inside a database savepoint so state cannot leak into
+# the next file, an HTTP stub registered from Wren reaches the fresh VM a route
+# handler runs in, Fixture drives Request/Response without a server, and the
+# clock and PRNG can be pinned deterministically.
+if [[ "$TARGET_EXEC" != "-" ]]; then
+  tfeat_line=$LINENO
+  _test_start_ms=$(now_ms)
+  tfeat_exe=$(realpath "$TARGET_EXEC")
+  tfeat_parent=$(mktemp -d)
+
+  # (a) relative imports + _init.wren vars, (b) per-file database isolation.
+  tmod_root="$tfeat_parent/tmods"
+  mkdir -p "$tmod_root/_tests" "$tmod_root/_app"
+  cat > "$tmod_root/_migration.wren" <<'WREN'
+Db.migrate("tmods-iso", "CREATE TABLE IF NOT EXISTS iso_users (id INTEGER PRIMARY KEY, name TEXT)")
+WREN
+  cat > "$tmod_root/_tests/_init.wren" <<'WREN'
+var initValue = "init-visible"
+`INSERT INTO iso_users (name) VALUES ('sentinel')`.query
+WREN
+  cat > "$tmod_root/_app/components.wren" <<'WREN'
+class Greeter {
+  static text { "hello from component" }
+}
+WREN
+  cat > "$tmod_root/_tests/relative.wren" <<'WREN'
+import "../_app/components" for Greeter
+Test.assert(Greeter.text == "hello from component", "relative import")
+Test.assert(initValue == "init-visible", "_init var visible")
+WREN
+  cat > "$tmod_root/_tests/absolute.wren" <<'WREN'
+import "/_app/components" for Greeter
+Test.assert(Greeter.text == "hello from component", "absolute import")
+Test.assert(initValue == "init-visible", "_init var visible")
+WREN
+  # Both files assert the same starting state, so they pass in either readdir
+  # order only because the runner rolls each file back.
+  cat > "$tmod_root/_tests/db_a.wren" <<'WREN'
+Test.assert(`SELECT COUNT(*) FROM iso_users`.toNum == 1, "a starts with only the init sentinel")
+`INSERT INTO iso_users (name) VALUES ('a')`.query
+Test.assert(`SELECT COUNT(*) FROM iso_users`.toNum == 2, "a added one row")
+WREN
+  cat > "$tmod_root/_tests/db_b.wren" <<'WREN'
+Test.assert(`SELECT COUNT(*) FROM iso_users`.toNum == 1, "b starts with only the init sentinel")
+`INSERT INTO iso_users (name) VALUES ('b')`.query
+Test.assert(`SELECT COUNT(*) FROM iso_users`.toNum == 2, "b added one row")
+WREN
+
+  # (c) stubs used from a route handler, including a wildcard and a redirect.
+  tstub_root="$tfeat_parent/tstubs"
+  mkdir -p "$tstub_root/_tests"
+  cat > "$tstub_root/stub.wren" <<'WREN'
+var client = Http.new()
+client.call("https://stub.example/x", {})
+return client.body
+WREN
+  cat > "$tstub_root/stubwild.wren" <<'WREN'
+var client = Http.new()
+client.call("https://stub.example/wild/anything", {})
+return client.body
+WREN
+  cat > "$tstub_root/stubredir.wren" <<'WREN'
+var client = Http.new()
+client.call("https://stub.example/redirect", {})
+return client.body
+WREN
+  cat > "$tstub_root/_tests/stub.wren" <<'WREN'
+Test.clearHttpStubs()
+Test.stubHttp("https://stub.example/x", {
+  "status": 200,
+  "headers": {"Content-Type": "application/json"},
+  "body": "{\"ok\":true}"
+})
+Test.get("/stub").status(200).equals("{\"ok\":true}")
+var calls = Test.httpCalls
+Test.assert(calls.count == 1, "the handler's call was recorded")
+Test.assert(calls[0]["url"] == "https://stub.example/x", "recorded url")
+Test.assert(calls[0]["method"] == "GET", "recorded method")
+Test.assert(calls[0]["headers"] is Map, "recorded headers are a Map")
+
+Test.clearHttpStubs()
+Test.stubHttp("https://stub.example/wild/*", {"status": 200, "body": "wild"})
+Test.get("/stubwild").equals("wild")
+
+Test.clearHttpStubs()
+Test.stubHttp("https://stub.example/redirect", {"status": 302, "headers": {"Location": "https://stub.example/target"}})
+Test.stubHttp("https://stub.example/target", {"status": 200, "body": "landed"})
+Test.get("/stubredir").equals("landed")
+Test.assert(Test.httpCalls.count == 2, "the redirect logged both hops")
+Test.clearHttpStubs()
+WREN
+
+  # (d) Fixture + imported component, (e) frozen clock, (f) seeded random.
+  tfix_root="$tfeat_parent/tfixtures"
+  mkdir -p "$tfix_root/_tests" "$tfix_root/_app"
+  cat > "$tfix_root/_app/components.wren" <<'WREN'
+class Greeter {
+  static render {
+    Response.header("X-Component", "yes")
+    Response.out("hello %(Request.get("name") || "world")")
+    return Response.out
+  }
+  static posted { Request.post("x") || "" }
+  static cookie { Cookie.get("theme") || "" }
+  static routeId { Request.route(0) || "" }
+}
+WREN
+  cat > "$tfix_root/now.wren" <<'WREN'
+return "%(Date.now.unix)"
+WREN
+  cat > "$tfix_root/seed.wren" <<'WREN'
+return Util.randomString(12)
+WREN
+  cat > "$tfix_root/_tests/fixture.wren" <<'WREN'
+import "/_app/components" for Greeter
+var f = Fixture.get("/notes/42").route("/notes").query("name", "ana").header("Accept", "text/html").apply()
+Greeter.render
+Test.assert(f.status == 200, "fixture status")
+Test.assert(f.body == "hello ana", "fixture body was %(f.body)")
+Test.assert(f.header("x-component") == "yes", "fixture header")
+Test.assert(f.headers["x-component"] == "yes", "fixture headers map")
+Test.assert(Greeter.routeId == "42", "fixture route segment")
+var p = Fixture.post("/form", {"x": "42"}).cookie("theme", "dark").apply()
+Test.assert(Greeter.posted == "42", "fixture post value")
+Test.assert(Greeter.cookie == "dark", "fixture cookie value")
+WREN
+  cat > "$tfix_root/_tests/clock.wren" <<'WREN'
+Test.freezeTime(1767225600)
+Test.get("/now").equals("1767225600")
+Test.unfreezeTime
+Test.assert(Num.fromString(Test.get("/now").text()) > 1700000000, "clock restored")
+WREN
+  cat > "$tfix_root/_tests/random.wren" <<'WREN'
+Test.randomSeed(7)
+var direct = Util.randomString(12)
+Test.randomSeed(7)
+Test.get("/seed").equals(direct)
+Test.randomSeed()
+Test.assert(Util.randomString(12).count == 12, "restored random length")
+Test.assert(Test.get("/seed").text().count == 12, "restored random via route")
+WREN
+
+  # The path-based module name must not cost the failure its file and line.
+  tfail_root="$tfeat_parent/tfailmod"
+  mkdir -p "$tfail_root/_tests" "$tfail_root/_app"
+  cat > "$tfail_root/_app/helper.wren" <<'WREN'
+class Helper {
+  static ok { true }
+}
+WREN
+  cat > "$tfail_root/_tests/fail_rel.wren" <<'WREN'
+import "../_app/helper" for Helper
+
+Test.assert(Helper.ok, "helper loaded")
+Test.assert(false, "relative failure")
+WREN
+
+  tmod_out=$(cd "$tfeat_parent" && "$tfeat_exe" -T tmods 2>&1)
+  tmod_code=$?
+  tstub_out=$(cd "$tfeat_parent" && "$tfeat_exe" -T tstubs 2>&1)
+  tstub_code=$?
+  tfix_out=$(cd "$tfeat_parent" && "$tfeat_exe" -T tfixtures 2>&1)
+  tfix_code=$?
+  tfail_out=$(cd "$tfeat_parent" && "$tfeat_exe" -T tfailmod -q 2>&1)
+  tfail_code=$?
+  rm -rf "$tfeat_parent"
+
+  if [[ "$tmod_code" == 0 && "$tmod_out" == *"Passed Tests: 4"* \
+        && "$tmod_out" == *"Failed Tests: 0"* ]]; then
+    report_result "Test file modules + isolation" "$tfeat_line" 0
+  else
+    report_result "Test file modules + isolation" "$tfeat_line" 1 \
+      "code($tmod_code):'${tmod_out:0:240}'"
+  fi
+  if [[ "$tstub_code" == 0 && "$tstub_out" == *"Passed Tests: 1"* \
+        && "$tstub_out" == *"Failed Tests: 0"* ]]; then
+    report_result "Http stubs reach handler VMs " "$tfeat_line" 0
+  else
+    report_result "Http stubs reach handler VMs " "$tfeat_line" 1 \
+      "code($tstub_code):'${tstub_out:0:240}'"
+  fi
+  if [[ "$tfix_code" == 0 && "$tfix_out" == *"Passed Tests: 3"* \
+        && "$tfix_out" == *"Failed Tests: 0"* ]]; then
+    report_result "Fixture, clock and random  " "$tfeat_line" 0
+  else
+    report_result "Fixture, clock and random  " "$tfeat_line" 1 \
+      "code($tfix_code):'${tfix_out:0:240}'"
+  fi
+  if [[ "$tfail_code" != 0 \
+        && "$tfail_out" == *"_tests/fail_rel.wren:4"* \
+        && "$tfail_out" == *"relative failure"* ]]; then
+    report_result "Test failure names its file " "$tfeat_line" 0
+  else
+    report_result "Test failure names its file " "$tfeat_line" 1 \
+      "code($tfail_code):'${tfail_out:0:200}'"
+  fi
+else
+  skip_test "Test file modules + isolation" "requires local binary access"
+  skip_test "Http stubs reach handler VMs " "requires local binary access"
+  skip_test "Fixture, clock and random  " "requires local binary access"
+  skip_test "Test failure names its file " "requires local binary access"
+fi
+
 # -T -q is documented as one summary line plus a ### FAIL block per failure.
 # Migrations run before the suite and log through message(), so their output
 # used to land above that summary. -q must drop it; plain -T must keep it.

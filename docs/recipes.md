@@ -348,20 +348,27 @@ return <main>
 - The final step is an ordinary `POST` with `Session.csrf`; only the answers
   travel in the URL, while the write itself stays protected.
 
-## Tests: one database, no noise
+## Tests: clean state, no noise
 
-- Every file in `_tests/` runs in the same process against **one** temporary
-  database for that run. A row inserted by `a.wren` is visible to `b.wren`;
-  do not assume each file starts clean.
-- Seed shared rows in `_tests/_init.wren`, which runs once before the files.
+- Each file in `_tests/` runs inside its own savepoint on one temporary
+  database for the run, rolled back when the file ends. Migrations run once
+  before the suite; `_tests/_init.wren` runs before every file, inside that
+  file's savepoint. Writes belong to the file that made them: files are
+  isolated and their order does not matter.
+- Seed shared rows in `_tests/_init.wren`. It runs before every test file, so
+  the rows exist in each file and disappear with it.
 - `System.print` output becomes part of the test log. Never dump a whole
   table or a list of sessions; print one scalar when you need to debug, and
   delete the debug test afterwards. Hundreds of `debugN.wren` files make every
   later run slower and bury the real failure.
-- `Test` has no cookie jar. For session-scoped behaviour, test the domain
-  class directly, or assert the redirect and the row it wrote. When the app
-  accepts an explicit header, use
-  `.setHeader("Cookie", "session=...")` before the assertion.
+- `Test` keeps a cookie jar shared by the requests in one file, so a session
+  minted by one `Test.get`/`Test.post` is the session the next one presents.
+  `Test.cookie(name)` reads a cookie, `Test.clearCookies()` empties the jar, and
+  `.withCsrf()` relies on it. To seed a session by hand, set
+  `.setHeader("Cookie", "session=...")` before the request.
+- For code that reads `Session` directly, import the domain class in the test
+  and call it under a `Fixture`, which installs the request without the router.
+  See [Testing in Bialet](tests.md#the-fixture-class).
 - Never `import "bialet/test" for Test`: the runner preloads `Test`, and the
   import fails with `Module variable is already defined`.
 - Assertions are lazy: the request fires on the first `.status`/`.contains`.
