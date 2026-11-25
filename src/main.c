@@ -881,8 +881,14 @@ int main(int argc, char* argv[]) {
 #ifndef _WIN32
   int       status;
   pthread_t cron_tid;
-  pthread_create(&cron_tid, NULL, cron_thread, NULL);
+  int       cron_started = 0;
 
+  // The cron thread is started in the parent branch below, once the HTTP child
+  // reports ready, not here. A cron tick holds run_mutex for its whole run and
+  // atfork_prepare takes the same mutex, so creating it before fork() let the
+  // first tick -- a restart always runs the whole cron file once -- hold the
+  // lock across fork() and leave the server without a child until the tick
+  // finished. See tests/run.sh, "Cron does not delay the server".
   if(!bialet_config.no_watch) {
     dmon_init();
     dmon_watch(bialet_config.full_root_dir, dmon_callback, DMON_WATCHFLAGS_RECURSIVE,
@@ -959,6 +965,15 @@ int main(int argc, char* argv[]) {
       } while(ready_read < 0 && errno == EINTR && keep_running);
       close(ready[0]);
       int child_started = ready_read == 1;
+      // Start the supervisor threads now: the child has its own database
+      // connection and is about to serve, so the first cron tick cannot hold
+      // run_mutex across the fork that creates it (see the comment where
+      // cron_tid is declared). Only the first pass starts them; a restarted
+      // child inherits a supervisor whose cron keeps running.
+      if(!cron_started) {
+        pthread_create(&cron_tid, NULL, cron_thread, NULL);
+        cron_started = 1;
+      }
       // Parent: wait for the HTTP child specifically. `wait()` would also
       // reap the browser child forked by open_browser() in dev mode and, if
       // that one exited cleanly first, tear down dmon and exit while the

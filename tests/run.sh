@@ -3707,6 +3707,46 @@ else
   skip_test "Cron jobs execute           " "requires local binary access"
 fi
 
+# Tests - Cron does not delay the server at startup
+# The cron thread used to be created before the fork loop. A tick holds
+# run_mutex for its whole run and atfork_prepare waits on that same mutex, so
+# the first tick (a restart always runs the whole cron file once) delayed the
+# fork that creates the HTTP child: the server answered only when the tick
+# finished. A deliberately slow first tick must not delay the first 200.
+if [[ "$TARGET_EXEC" != "-" && "$IS_WINE" == 0 ]]; then
+  cron_start_line=$LINENO
+  _test_start_ms=$(now_ms)
+  cron_start_root=$(mktemp -d)
+  cron_start_log=/tmp/tests-cron-start.log
+  rm -f "$cron_start_log"
+  cat > "$cron_start_root/_cron.wren" <<'CRON_EOF'
+Cron.every(1) { |d|
+  var until = Date.now.unix + 6
+  while (Date.now.unix < until) {}
+  System.print("CRON-START-DONE")
+}
+CRON_EOF
+  printf 'return "ok"\n' > "$cron_start_root/index.wren"
+  require_free_port "$HOST" "$CRON_PORT" "cron startup server"
+  cron_start_at=$(now_ms)
+  "$TARGET_EXEC" -h "$HOST" -p "$CRON_PORT" -l "$cron_start_log" \
+    "$cron_start_root" > /dev/null 2>&1 &
+  disown
+  cron_start_ok=0
+  wait_http "http://$HOST:$CRON_PORT/" 200 20 && cron_start_ok=1
+  cron_start_ms=$(( $(now_ms) - cron_start_at ))
+  stop_matching_servers "$TARGET_EXEC -h $HOST -p $CRON_PORT -l $cron_start_log"
+  rm -rf "$cron_start_root"
+  if [[ "$cron_start_ok" == 1 && "$cron_start_ms" -lt 4000 ]]; then
+    report_result "Cron does not delay server  " "$cron_start_line" 0
+  else
+    report_result "Cron does not delay server  " "$cron_start_line" 1 \
+      "first 200 after ${cron_start_ms}ms (ok:$cron_start_ok); a 6s first tick must not delay the fork"
+  fi
+else
+  skip_test "Cron does not delay server  " "requires local POSIX binary access"
+fi
+
 # Tests - bialet dev
 # `bialet dev` must serve the current directory, turn on live reload and error
 # pages for that run, inject the live-reload script into HTML, and bump the
