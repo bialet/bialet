@@ -1517,8 +1517,10 @@ Test.assert(fixture.header("location") == "/tasks", "it redirects to the list")
   the same value back. A page that renders is not a flow that works.
 - Add a boundary case (empty table, today against a future date, the first and
   last day of a month) instead of one mid-month date.
-- `Test.headers` does not exist: drop the header and assert the rest, or gate
-  the check on `Config.get("test_mode")` set in `_init.wren`.
+- `Test.headers` does not exist: drop the header and assert the rest. For a
+  CSRF-protected form, read the token with `var token = Test.get("/ruta").csrf()`
+  and send it in the POST (`"_bialet_csrf": token`); never add a
+  `Config.get("test_mode")` bypass to production code.
 - Never weaken an assertion to make a red test go green.
 - Keep the suite quiet: no `System.print` of whole tables and no leftover
   `debug*.wren` files.
